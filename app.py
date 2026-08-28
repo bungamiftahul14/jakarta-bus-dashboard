@@ -142,7 +142,7 @@ tab1, tab2, tab3, tab4 = st.tabs([
 # ==========================================
 with tab1:
     st.subheader("Analisis Neto Arus Pergerakan Penumpang")
-    st.caption("Perhitungan selisih penumpang memisahkan fungsi terminal antara Transit Hub (Origin/Komuter) dan Gateway Hub (Entry Point)[cite: 3].")
+    st.caption("Perhitungan selisih penumpang memisahkan fungsi terminal antara Transit Hub (Origin/Komuter) dan Gateway Hub (Entry Point).")
     
     hub_summary = df.groupby('terminal').agg({
         'jumlah_penumpang_datang': 'sum',
@@ -199,7 +199,7 @@ with tab1:
 # ==========================================
 with tab2:
     st.subheader("Evaluasi Lalu Lintas & Load Factor Keterisian Bus")
-    st.caption("Pemetaan tingkat keterisian bus per terminal untuk mendeteksi area overcrowded dan underutilized[cite: 3].")
+    st.caption("Pemetaan tingkat keterisian bus per terminal untuk mendeteksi area overcrowded dan underutilized.")
     
     mismatch_summary = df.groupby('terminal').agg({
         'jumlah_penumpang_berangkat': 'sum',
@@ -275,7 +275,7 @@ with tab3:
         fig_pie = px.pie(
             values=[top3, other],
             names=['Top 3 Terminal (Cililitan, Manggarai, Blok M)', '14 Terminal Lainnya'],
-            title=f"Konsentrasi Beban: Top 3 Menyumbang {top3:.2f}% Penumpang[cite: 3]",
+            title=f"Konsentrasi Beban: Top 3 Menyumbang {top3:.2f}% Penumpang",
             color_discrete_sequence=['#0F172A', '#94A3B8']
         )
         fig_pie.update_layout(template="plotly_white")
@@ -343,64 +343,4 @@ with tab4:
             "Trips_Ideal_Harian": st.column_config.NumberColumn("Trips Ideal/Hari", format="%,.0f"),
             "Selisih_Trips_Harian": st.column_config.NumberColumn("Status Alokasi Trips (Surplus/Defisit)", format="%+,.0f")
         }
-    )
-
-# ==========================================
-# DOKUMEN RINGKASAN
-# ==========================================
-st.divider()
-st.subheader("📄 Unduh Laporan Ringkasan")
-st.caption("Unduh ringkasan data hasil analisis dan alokasi bus dalam format CSV atau HTML.")
-
-report_summary = filtered_df.groupby('terminal').agg({
-    'jumlah_penumpang_berangkat': 'sum',
-    'jumlah_penumpang_datang': 'sum',
-    'jumlah_bus_berangkat': 'sum',
-    'jumlah_bus_datang': 'sum'
-}).reset_index()
-
-report_summary['net_flow'] = report_summary['jumlah_penumpang_berangkat'] - report_summary['jumlah_penumpang_datang']
-report_summary['load_factor'] = (report_summary['jumlah_penumpang_berangkat'] / report_summary['jumlah_bus_berangkat']).round(2)
-
-csv_data = report_summary.to_csv(index=False).encode('utf-8')
-
-html_report = f"""
-<html>
-<head>
-    <style>
-        body {{ font-family: Arial, sans-serif; padding: 20px; color: #0F172A; }}
-        h1 {{ color: #0F172A; font-size: 20px; margin-bottom: 4px; }}
-        p {{ color: #64748B; font-size: 12px; margin-top: 0; }}
-        table {{ width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 12px; }}
-        th, td {{ border: 1px solid #CBD5E1; padding: 8px; text-align: left; }}
-        th {{ background-color: #0F172A; color: white; }}
-        tr:nth-child(even) {{ background-color: #F8FAFC; }}
-    </style>
-</head>
-<body>
-    <h1>Laporan Analisis Transportasi Terminal DKI Jakarta</h1>
-    <p>Diunduh secara otomatis dari Dashboard Efisiensi Bus</p>
-    <hr>
-    {report_summary.to_html(index=False, classes='table')}
-</body>
-</html>
-"""
-
-col_exp1, col_exp2 = st.columns([1, 4])
-with col_exp1:
-    st.download_button(
-        label="📥 Unduh Ringkasan CSV",
-        data=csv_data,
-        file_name="Ringkasan_Efisiensi_Bus_DKI.csv",
-        mime="text/csv",
-        use_container_width=True
-    )
-
-with col_exp2:
-    st.download_button(
-        label="📄 Unduh Laporan HTML/PDF",
-        data=html_report,
-        file_name="Laporan_Efisiensi_Bus_DKI.html",
-        mime="text/html",
-        use_container_width=True
     )

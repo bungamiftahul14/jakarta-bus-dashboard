@@ -179,25 +179,47 @@ with tab1:
     }).reset_index()
     
     hub_summary['net_flow'] = hub_summary['jumlah_penumpang_berangkat'] - hub_summary['jumlah_penumpang_datang']
-    hub_summary['peran_terminal'] = hub_summary['net_flow'].apply(
-        lambda x: 'Transit Hub (Net (+) Keberangkatan)' if x > 0 else 'Gateway Hub (Net (-) Kedatangan)'
-    )
-    hub_summary_sorted = hub_summary.sort_values(by='net_flow', ascending=False)
     
-    fig_netflow = px.bar(
-        hub_summary_sorted,
-        x='terminal',
-        y='net_flow',
-        color='peran_terminal',
-        color_discrete_map={
-            'Transit Hub (Net (+) Keberangkatan)': '#0284C7',
-            'Gateway Hub (Net (-) Kedatangan)': '#E11D48'
-        },
-        labels={'terminal': 'Terminal', 'net_flow': 'Selisih Neto Penumpang (Berangkat - Datang)'},
-        title="Distribusi Peran Terminal Berdasarkan Net Flow Penumpang"
-    )
-    fig_netflow.update_layout(template="plotly_white")
-    st.plotly_chart(fig_netflow, use_container_width=True)
+    # Memisahkan Transit Hub (+ Net) dan Gateway Hub (- Net)
+    transit_df = hub_summary[hub_summary['net_flow'] > 0].sort_values(by='net_flow', ascending=False)
+    gateway_df = hub_summary[hub_summary['net_flow'] < 0].sort_values(by='net_flow', ascending=True)
+    gateway_df['net_flow_abs'] = gateway_df['net_flow'].abs()  # Buat positif untuk visualisasi
+    
+    col_t1, col_t2 = st.columns(2)
+    
+    with col_t1:
+        st.markdown("##### 🟦 Transit Hubs (Dominan Keberangkatan / Komuter)")
+        fig_transit = px.bar(
+            transit_df,
+            x='terminal',
+            y='net_flow',
+            text_auto='.2s',
+            labels={'terminal': 'Terminal', 'net_flow': 'Surplus Keberangkatan'},
+            title="Net Flow Positif (Penumpang Berangkat > Datang)"
+        )
+        fig_transit.update_traces(marker_color='#0284C7')
+        fig_transit.update_layout(template="plotly_white")
+        st.plotly_chart(fig_transit, use_container_width=True)
+        
+    with col_t2:
+        st.markdown("##### 🟥 Gateway Hubs (Dominan Kedatangan / Luar Kota)")
+        fig_gateway = px.bar(
+            gateway_df,
+            x='terminal',
+            y='net_flow_abs',
+            text_auto='.2s',
+            labels={'terminal': 'Terminal', 'net_flow_abs': 'Surplus Kedatangan'},
+            title="Net Flow Negatif (Penumpang Datang > Berangkat)"
+        )
+        fig_gateway.update_traces(marker_color='#E11D48')
+        fig_gateway.update_layout(template="plotly_white")
+        st.plotly_chart(fig_gateway, use_container_width=True)
+
+    st.markdown("""
+    **Kesimpulan Peran Terminal:**
+    * **Transit Hubs (Manggarai, Cililitan, Blok M):** Berfungsi sebagai titik kumpul komuter harian menuju tempat kerja/aktivitas bisnis[cite: 3].
+    * **Gateway Hubs (Kampung Rambutan, Rawamangun):** Berfungsi sebagai gerbang masuk utama yang menyerap arus kedatangan penumpang dari luar daerah DKI Jakarta[cite: 3].
+    """)
 
 # ==========================================
 # TAB 2: SUPPLY-DEMAND MISMATCH

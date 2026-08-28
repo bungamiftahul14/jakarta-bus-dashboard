@@ -9,76 +9,87 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# --- PALET WARNA ENTERPRISE ---
-NAVY_PRIMARY = "#0F172A"
-BLUE_ACCENT = "#2563EB"
-RED_ACCENT = "#DC2626"
-GREY_INACTIVE = "#CBD5E1"
-GREEN_TARGET = "#16A34A"
+# --- PALET WARNA MODERN ENTERPRISE ---
+NAVY_DARK = "#0F172A"
+BLUE_PRIMARY = "#1E40AF"
+BLUE_LIGHT = "#3B82F6"
+RED_WARNING = "#B91C1C"
+GREY_SLATE = "#CBD5E1"
+GREEN_IDEAL = "#15803D"
+BG_LIGHT = "#F1F5F9"
 
 # --- CUSTOM ENTERPRISE CSS STYLING ---
 st.markdown(f"""
     <style>
-    .main {{
-        background-color: #F8FAFC;
+    /* Background Web Modern Soft Slate */
+    .stApp {{
+        background-color: {BG_LIGHT};
         font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
     }}
+    
+    /* Header Utama */
     .header-container {{
-        background-color: {NAVY_PRIMARY};
-        padding: 24px 32px;
-        border-radius: 8px;
+        background: linear-gradient(135deg, #0F172A 0%, #1E293B 100%);
+        padding: 28px 36px;
+        border-radius: 12px;
         color: #FFFFFF;
         margin-bottom: 24px;
-        border-left: 6px solid {BLUE_ACCENT};
+        box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08);
+        border-left: 6px solid {BLUE_LIGHT};
     }}
     .header-title {{
-        font-size: 24px;
+        font-size: 26px;
         font-weight: 700;
         letter-spacing: -0.02em;
         margin: 0;
         color: #F8FAFC;
     }}
     .header-subtitle {{
-        font-size: 13px;
+        font-size: 13.5px;
         color: #94A3B8;
-        margin-top: 4px;
+        margin-top: 6px;
         margin-bottom: 0;
     }}
+    
+    /* Kartu Metrik Modern Elevation */
     div[data-testid="stMetric"] {{
         background-color: #FFFFFF;
         border: 1px solid #E2E8F0;
-        padding: 16px 20px;
-        border-radius: 8px;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        padding: 18px 22px;
+        border-radius: 10px;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.04);
+        border-top: 4px solid {BLUE_PRIMARY};
     }}
     div[data-testid="stMetricLabel"] {{
-        font-size: 12px;
-        font-weight: 600;
+        font-size: 11.5px;
+        font-weight: 700;
         color: #64748B;
         text-transform: uppercase;
-        letter-spacing: 0.05em;
+        letter-spacing: 0.06em;
     }}
     div[data-testid="stMetricValue"] {{
-        font-size: 22px;
-        font-weight: 700;
-        color: {NAVY_PRIMARY};
+        font-size: 23px;
+        font-weight: 800;
+        color: {NAVY_DARK};
     }}
+    
+    /* Navigasi Tab Modern */
     .stTabs [data-baseweb="tab-list"] {{
         gap: 8px;
         border-bottom: 2px solid #E2E8F0;
     }}
     .stTabs [data-baseweb="tab"] {{
-        height: 44px;
+        height: 46px;
         white-space: pre-wrap;
-        background-color: #F1F5F9;
-        border-radius: 6px 6px 0px 0px;
+        background-color: #E2E8F0;
+        border-radius: 8px 8px 0px 0px;
         color: #475569;
         font-size: 13px;
         font-weight: 600;
-        padding: 0px 16px;
+        padding: 0px 20px;
     }}
     .stTabs [aria-selected="true"] {{
-        background-color: {NAVY_PRIMARY} !important;
+        background-color: {NAVY_DARK} !important;
         color: #FFFFFF !important;
     }}
     #MainMenu {{visibility: hidden;}}
@@ -146,7 +157,7 @@ tab1, tab2, tab3, tab4, tab5 = st.tabs([
 ])
 
 # ==========================================
-# TAB 1: RANKING & ANOMALI BUS (SEKARANG SUDAH INTERAKTIF)
+# TAB 1: RANKING & ANOMALI BUS
 # ==========================================
 with tab1:
     st.subheader("Ranking Terminal: Top 5 Penumpang vs Evaluasi Pergerakan Bus")
@@ -157,13 +168,12 @@ with tab1:
     top5_berangkat = df.groupby('terminal')['jumlah_penumpang_berangkat'].sum().reset_index().sort_values(by='jumlah_penumpang_berangkat', ascending=False).head(5)
     top5_datang = df.groupby('terminal')['jumlah_penumpang_datang'].sum().reset_index().sort_values(by='jumlah_penumpang_datang', ascending=False).head(5)
     
-    # Pewarnaan Interaktif berdasarkan Terminal yang Dipilih
     if is_filtered:
-        top5_berangkat['color'] = top5_berangkat['terminal'].apply(lambda x: BLUE_ACCENT if x == selected_terminal else GREY_INACTIVE)
-        top5_datang['color'] = top5_datang['terminal'].apply(lambda x: BLUE_ACCENT if x == selected_terminal else GREY_INACTIVE)
+        top5_berangkat['color'] = top5_berangkat['terminal'].apply(lambda x: BLUE_PRIMARY if x == selected_terminal else GREY_SLATE)
+        top5_datang['color'] = top5_datang['terminal'].apply(lambda x: BLUE_PRIMARY if x == selected_terminal else GREY_SLATE)
     else:
-        top5_berangkat['color'] = BLUE_ACCENT
-        top5_datang['color'] = NAVY_PRIMARY
+        top5_berangkat['color'] = BLUE_PRIMARY
+        top5_datang['color'] = NAVY_DARK
 
     with col_r1:
         fig_top5_berangkat = px.bar(
@@ -195,7 +205,7 @@ with tab1:
 
     st.divider()
 
-    st.subheader("Evaluasi Lalu Lintas Pergerakan Bus (17 Terminal)")
+    st.subheader("🚌 Evaluasi Lalu Lintas Pergerakan Bus (17 Terminal)")
     
     bus_ranking = df.groupby('terminal').agg({
         'jumlah_bus_datang': 'sum',
@@ -208,7 +218,6 @@ with tab1:
     bus_ranking['No'] = bus_ranking.index + 1
     bus_ranking['Terminal_Label'] = bus_ranking['terminal'].apply(lambda x: "MANGGARAI (ANOMALI)" if x == "MANGGARAI" else x)
     
-    # Filter Tabel jika terminal tertentu dipilih
     if is_filtered:
         display_bus_ranking = bus_ranking[bus_ranking['terminal'] == selected_terminal]
     else:
@@ -245,14 +254,14 @@ with tab1:
             selected_rank = display_bus_ranking['No'].values[0]
             selected_trips = display_bus_ranking['Total_Trips'].values[0]
             st.info(f"""
-            **Profil Operasional Bus - {selected_terminal}:**
+            📌 **Profil Operasional Bus - {selected_terminal}:**
             
             • **Peringkat Pergerakan Bus:** #**{selected_rank}** dari 17 Terminal
             • **Total Pergerakan Bus:** **{selected_trips:,.0f} trips**
             """)
         else:
             st.error("""
-            **Akar Masalah: Critical Supply Mismatch di Manggarai**
+            🚨 **Akar Masalah: Critical Supply Mismatch di Manggarai**
             
             • **Volume Penumpang:** Peringkat **#2** se-DKI Jakarta (8.92 Juta Orang)
             • **Frekuensi Bus:** Peringkat **#16** (Hanya 64.4 Ribu Pergerakan Trips)
@@ -279,11 +288,11 @@ with tab2:
     gateway_df['net_flow_abs'] = gateway_df['net_flow'].abs()
     
     if is_filtered:
-        transit_df['color'] = transit_df['terminal'].apply(lambda x: BLUE_ACCENT if x == selected_terminal else GREY_INACTIVE)
-        gateway_df['color'] = gateway_df['terminal'].apply(lambda x: RED_ACCENT if x == selected_terminal else GREY_INACTIVE)
+        transit_df['color'] = transit_df['terminal'].apply(lambda x: BLUE_PRIMARY if x == selected_terminal else GREY_SLATE)
+        gateway_df['color'] = gateway_df['terminal'].apply(lambda x: RED_WARNING if x == selected_terminal else GREY_SLATE)
     else:
-        transit_df['color'] = BLUE_ACCENT
-        gateway_df['color'] = RED_ACCENT
+        transit_df['color'] = BLUE_PRIMARY
+        gateway_df['color'] = RED_WARNING
     
     col_t1, col_t2 = st.columns(2)
     
@@ -343,7 +352,7 @@ with tab3:
     
     if is_filtered:
         mismatch_summary_sorted['color'] = mismatch_summary_sorted['terminal'].apply(
-            lambda x: RED_ACCENT if x == selected_terminal else GREY_INACTIVE
+            lambda x: RED_WARNING if x == selected_terminal else GREY_SLATE
         )
         fig_bar_mismatch = px.bar(
             mismatch_summary_sorted,
@@ -361,7 +370,7 @@ with tab3:
             x='terminal',
             y='load_factor',
             color='load_factor',
-            color_continuous_scale=['#DBEAFE', '#2563EB', '#991B1B'],
+            color_continuous_scale=['#DBEAFE', '#1E40AF', '#991B1B'],
             text='load_factor',
             labels={'terminal': 'Nama Terminal', 'load_factor': 'Rata-rata Penumpang / Bus'},
             title=f"Rata-Rata Penumpang per Bus (Target Ideal = {target_capacity} Penumpang/Bus)"
@@ -370,7 +379,7 @@ with tab3:
     fig_bar_mismatch.add_hline(
         y=target_capacity, 
         line_dash="dash", 
-        line_color=GREEN_TARGET, 
+        line_color=GREEN_IDEAL, 
         annotation_text=f"Target Ideal ({target_capacity} pnp/bus)"
     )
     fig_bar_mismatch.update_layout(template="plotly_white")
@@ -395,7 +404,7 @@ with tab4:
             y='jumlah_penumpang_berangkat', 
             markers=True,
             title=f"Pergerakan Penumpang Bulanan ({selected_terminal})",
-            color_discrete_sequence=[BLUE_ACCENT]
+            color_discrete_sequence=[BLUE_PRIMARY]
         )
         fig_line.update_layout(template="plotly_white")
         st.plotly_chart(fig_line, use_container_width=True, config={'displayModeBar': False})
@@ -414,7 +423,7 @@ with tab4:
             values=[top3, other],
             names=['3 Terminal Teratas (Cililitan, Manggarai, Blok M)', '14 Terminal Lainnya'],
             title=f"3 Terminal Teratas Menyumbang {top3:.2f}% Penumpang",
-            color_discrete_sequence=[NAVY_PRIMARY, GREY_INACTIVE]
+            color_discrete_sequence=[NAVY_DARK, GREY_SLATE]
         )
         fig_pie.update_layout(template="plotly_white")
         st.plotly_chart(fig_pie, use_container_width=True, config={'displayModeBar': False})

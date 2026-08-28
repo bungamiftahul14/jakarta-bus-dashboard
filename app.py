@@ -4,7 +4,7 @@ import plotly.express as px
 
 # --- KONFIGURASI HALAMAN ---
 st.set_page_config(
-    page_title="DKI Jakarta Public Bus Efficiency Dashboard",
+    page_title="Analisis Transportasi Terminal DKI Jakarta",
     layout="wide",
     initial_sidebar_state="expanded"
 )
@@ -105,15 +105,15 @@ df = load_data()
 # --- HEADER UTAMA ---
 st.markdown("""
     <div class="header-container">
-        <div class="header-title">DKI Jakarta Public Transportation Efficiency Dashboard</div>
-        <div class="header-subtitle">Executive Load Factor Analysis & Operational Bus Redistribution Strategy</div>
+        <div class="header-title">Analisis Pergerakan Penumpang & Efisiensi Operasional Bus</div>
+        <div class="header-subtitle">Optimasi Efisiensi Operasional Bus Perkotaan DKI Jakarta (Load Factor & Bus Allocation Analysis)</div>
     </div>
 """, unsafe_allow_html=True)
 
 # --- SIDEBAR FILTER ---
-st.sidebar.markdown("### Control Panel")
+st.sidebar.markdown("### Panel Kontrol")
 terminal_list = ["Seluruh Terminal"] + sorted(list(df['terminal'].dropna().unique()))
-selected_terminal = st.sidebar.selectbox("Highlight Scope Terminal:", terminal_list)
+selected_terminal = st.sidebar.selectbox("Pilih Terminal:", terminal_list)
 
 if selected_terminal != "Seluruh Terminal":
     filtered_df = df[df['terminal'] == selected_terminal]
@@ -122,7 +122,7 @@ else:
     filtered_df = df.copy()
     is_filtered = False
 
-# --- MACRO KPI CARDS (MENYESUAIKAN FILTER SIDEBAR) ---
+# --- INDIKATOR UTAMA VOLUME TRANSPORTASI ---
 col1, col2, col3, col4, col5 = st.columns(5)
 
 total_pnp_berangkat = filtered_df['jumlah_penumpang_berangkat'].sum()
@@ -131,31 +131,31 @@ net_flow = total_pnp_berangkat - total_pnp_datang
 total_bus_berangkat = filtered_df['jumlah_bus_berangkat'].sum()
 avg_load_factor = total_pnp_berangkat / total_bus_berangkat if total_bus_berangkat > 0 else 0
 
-col1.metric("Penumpang Berangkat", f"{total_pnp_berangkat:,.0f}")
-col2.metric("Penumpang Datang", f"{total_pnp_datang:,.0f}")
-col3.metric("Net Flow Volume", f"{net_flow:+,.0f}")
-col4.metric("Total Trips Bus", f"{total_bus_berangkat:,.0f}")
-col5.metric("Avg Load Factor", f"{avg_load_factor:.2f} pnp/trip")
+col1.metric("Total Penumpang Berangkat", f"{total_pnp_berangkat:,.0f}")
+col2.metric("Total Penumpang Datang", f"{total_pnp_datang:,.0f}")
+col3.metric("Selisih Neto Arus", f"{net_flow:+,.0f}")
+col4.metric("Total Pergerakan Bus", f"{total_bus_berangkat:,.0f}")
+col5.metric("Rata-Rata Load Factor", f"{avg_load_factor:.2f} pnp/bus")
 
 st.markdown("<br>", unsafe_allow_html=True)
 
 if is_filtered:
-    st.info(f"🎯 **Mode Highlight Active:** Menampilkan posisi relatif **{selected_terminal}** di antara seluruh terminal DKI Jakarta.")
+    st.info(f"🎯 **Mode Sorot Aktif:** Menampilkan posisi relatif **{selected_terminal}** di antara 17 terminal DKI Jakarta.")
 
 # --- STRUCTURED TABS ---
 tab1, tab2, tab3, tab4 = st.tabs([
-    "1. Executive Overview & Hub Roles", 
-    "2. Supply-Demand Mismatch", 
-    "3. Time Series & Pareto 70/30", 
-    "4. Dynamic Bus Simulator & Action Plan"
+    "1. Peran & Arus Terminal", 
+    "2. Analisis Load Factor & Mismatch", 
+    "3. Tren Bulanan & Pareto 70/30", 
+    "4. Simulasi Relokasi Bus & Rekomendasi"
 ])
 
 # ==========================================
-# TAB 1: EXECUTIVE OVERVIEW & HUB ROLES
+# TAB 1: PERAN & ARUS TERMINAL
 # ==========================================
 with tab1:
-    st.subheader("Divergensikasi Arus & Klasifikasi Peran Terminal")
-    st.caption("Perhitungan selisih neto memisahkan fungsi terminal antara Transit Hub (Komuter) dan Gateway Hub (Kedatangan Luar Kota)[cite: 3].")
+    st.subheader("Analisis Neto Arus Pergerakan Penumpang")
+    st.caption("Perhitungan selisih penumpang memisahkan fungsi terminal antara Transit Hub (Origin/Komuter) dan Gateway Hub (Entry Point)[cite: 3].")
     
     hub_summary = df.groupby('terminal').agg({
         'jumlah_penumpang_datang': 'sum',
@@ -168,7 +168,6 @@ with tab1:
     gateway_df = hub_summary[hub_summary['net_flow'] < 0].sort_values(by='net_flow', ascending=True)
     gateway_df['net_flow_abs'] = gateway_df['net_flow'].abs()
     
-    # Memberi warna highlight jika terminal dipilih
     if is_filtered:
         transit_df['color'] = transit_df['terminal'].apply(lambda x: '#2563EB' if x == selected_terminal else '#CBD5E1')
         gateway_df['color'] = gateway_df['terminal'].apply(lambda x: '#E11D48' if x == selected_terminal else '#CBD5E1')
@@ -179,7 +178,7 @@ with tab1:
     col_t1, col_t2 = st.columns(2)
     
     with col_t1:
-        st.markdown("##### 🟦 Transit Hubs (Net Flow Positif)")
+        st.markdown("##### 🟦 Terminal Transit Hub (Neto Keberangkatan Positif)")
         fig_transit = px.bar(
             transit_df,
             x='terminal',
@@ -187,14 +186,14 @@ with tab1:
             text_auto='.2s',
             color='color',
             color_discrete_map="identity",
-            labels={'terminal': 'Terminal', 'net_flow': 'Surplus Keberangkatan'},
-            title="Keberangkatan > Kedatangan"
+            labels={'terminal': 'Nama Terminal', 'net_flow': 'Selisih Neto Penumpang'},
+            title="Volume Keberangkatan Lebih Dominan"
         )
         fig_transit.update_layout(template="plotly_white", showlegend=False)
         st.plotly_chart(fig_transit, use_container_width=True)
         
     with col_t2:
-        st.markdown("##### 🟥 Gateway Hubs (Net Flow Negatif)")
+        st.markdown("##### 🟥 Terminal Gateway Hub (Neto Arus Negatif)")
         fig_gateway = px.bar(
             gateway_df,
             x='terminal',
@@ -202,18 +201,18 @@ with tab1:
             text_auto='.2s',
             color='color',
             color_discrete_map="identity",
-            labels={'terminal': 'Terminal', 'net_flow_abs': 'Surplus Kedatangan'},
-            title="Kedatangan > Keberangkatan"
+            labels={'terminal': 'Nama Terminal', 'net_flow_abs': 'Selisih Neto Kedatangan'},
+            title="Volume Kedatangan Lebih Dominan"
         )
         fig_gateway.update_layout(template="plotly_white", showlegend=False)
         st.plotly_chart(fig_gateway, use_container_width=True)
 
 # ==========================================
-# TAB 2: SUPPLY-DEMAND MISMATCH
+# TAB 2: ANALISIS LOAD FACTOR & MISMATCH
 # ==========================================
 with tab2:
-    st.subheader("Krisis Alokasi Operasional: Overcrowded vs Underutilized")
-    st.caption("Perbandingan keterisian muatan per perjalanan bus untuk mengisolasi terminal krisis[cite: 3].")
+    st.subheader("Evaluasi Lalu Lintas & Load Factor Keterisian Bus")
+    st.caption("Pemetaan tingkat keterisian bus per terminal untuk mendeteksi area overcrowded dan underutilized[cite: 3].")
     
     mismatch_summary = df.groupby('terminal').agg({
         'jumlah_penumpang_berangkat': 'sum',
@@ -234,8 +233,8 @@ with tab2:
             color='color',
             color_discrete_map="identity",
             text='load_factor',
-            labels={'terminal': 'Nama Terminal', 'load_factor': 'Load Factor (Penumpang / Trip Bus)'},
-            title=f"Posisi Load Factor {selected_terminal} Dibanding Terminal Lain"
+            labels={'terminal': 'Nama Terminal', 'load_factor': 'Penumpang / Trip Bus'},
+            title=f"Rasio Keterisian Bus {selected_terminal} Dibanding Terminal Lain"
         )
     else:
         fig_bar_mismatch = px.bar(
@@ -245,22 +244,28 @@ with tab2:
             color='load_factor',
             color_continuous_scale='Reds',
             text='load_factor',
-            labels={'terminal': 'Nama Terminal', 'load_factor': 'Load Factor (Penumpang / Trip Bus)'},
-            title="Load Factor per Terminal (Batas Ideal = 40 Pnp/Trip)"
+            labels={'terminal': 'Nama Terminal', 'load_factor': 'Penumpang / Trip Bus'},
+            title="Rata-Rata Keterisian Bus per Terminal (Kapasitas Ideal = 40 Pnp/Trip)"
         )
         
-    fig_bar_mismatch.add_hline(y=40, line_dash="dash", line_color="#16A34A", annotation_text="Target Ideal (40 pnp/trip)")
+    fig_bar_mismatch.add_hline(y=40, line_dash="dash", line_color="#16A34A", annotation_text="Kapasitas Ideal (40 pnp/bus)")
     fig_bar_mismatch.update_layout(template="plotly_white")
     st.plotly_chart(fig_bar_mismatch, use_container_width=True)
 
+    st.markdown("""
+    **Temuan Analisis:**
+    * **Kategori Overloaded Ekstrem (Critical Mismatch):** Manggarai menampung beban hingga **276.7 penumpang/keberangkatan** (7x lipat batas ideal) karena frekuensi bus berada di peringkat #16 meskipun melayani penumpang terbesar ke-2[cite: 3].
+    * **Kategori Underutilized (Pemborosan Operasional):** Terminal Klender, Pasar Minggu, Grogol, Pinang Ranti, dan Rawamangun mencatatkan tingkat keterisian **< 5 penumpang per bus**[cite: 3].
+    """)
+
 # ==========================================
-# TAB 3: TIME SERIES & PARETO
+# TAB 3: TREN BULANAN & PARETO 70/30
 # ==========================================
 with tab3:
     col_left, col_right = st.columns([6, 4])
     
     with col_left:
-        st.subheader("Dinamika Volatilitas Waktu (2024 - 2026)")
+        st.subheader("Tren Fluktuasi Penumpang Bulanan (2024 - 2026)")
         monthly_trend = filtered_df.groupby(filtered_df['tanggal_lengkap'].dt.to_period('M')).agg({
             'jumlah_penumpang_berangkat': 'sum'
         }).reset_index()
@@ -271,13 +276,13 @@ with tab3:
             x='tanggal_lengkap', 
             y='jumlah_penumpang_berangkat', 
             markers=True,
-            title=f"Tren Musiman Penumpang ({selected_terminal})"
+            title=f"Profil Dinamika Volume Penumpang Bulanan ({selected_terminal})"
         )
         fig_line.update_layout(template="plotly_white")
         st.plotly_chart(fig_line, use_container_width=True)
         
     with col_right:
-        st.subheader("Konsentrasi Beban (Prinsip Pareto 70/30)")
+        st.subheader("Prinsip Pareto 70/30 (Konsentrasi Beban)")
         pareto_df = df.groupby('terminal')['jumlah_penumpang_berangkat'].sum().reset_index()
         total_p = pareto_df['jumlah_penumpang_berangkat'].sum()
         pareto_df['kontribusi'] = (pareto_df['jumlah_penumpang_berangkat'] / total_p) * 100
@@ -296,12 +301,12 @@ with tab3:
         st.plotly_chart(fig_pie, use_container_width=True)
 
 # ==========================================
-# TAB 4: DYNAMIC SIMULATOR & ACTION PLAN
+# TAB 4: SIMULASI RELOKASI BUS & REKOMENDASI
 # ==========================================
 with tab4:
-    st.subheader("Simulasi Relokasi Armada & Strategi Optimasi")
+    st.subheader("Simulasi Alokasi Bus Ideal & Relokasi Sumber Daya")
     
-    target_capacity = st.slider("Target Kapasitas Ideal per Bus (Penumpang / Trip):", min_value=20, max_value=60, value=40)
+    target_capacity = st.slider("Tentukan Standar Kapasitas Ideal per Bus (Penumpang/Trip):", min_value=20, max_value=60, value=40)
     
     sim_df = df.groupby('terminal').agg({
         'jumlah_penumpang_berangkat': 'mean',
@@ -317,13 +322,12 @@ with tab4:
     
     sim_df_sorted = sim_df.sort_values(by='Selisih_Trips_Harian')
     
-    # Jika memilih terminal spesifik, sorot baris terminal tersebut di bagian atas
     if is_filtered:
-        st.info(f"Rincian Simulasi Alokasi untuk **{selected_terminal}**:")
+        st.info(f"Hasil Evaluasi Kebutuhan Bus Ideal untuk **{selected_terminal}**:")
         spec_row = sim_df[sim_df['Terminal'] == selected_terminal]
         st.dataframe(spec_row, use_container_width=True, hide_index=True)
         st.markdown("---")
-        st.caption("Matriks Simulasi Seluruh Terminal:")
+        st.caption("Tabel Alokasi Seluruh Terminal:")
     
     st.dataframe(
         sim_df_sorted,
@@ -333,16 +337,25 @@ with tab4:
             "Rata_Pnp_Harian": st.column_config.NumberColumn("Rata-Rata Penumpang/Hari", format="%,.0f"),
             "Trips_Eksisting_Harian": st.column_config.NumberColumn("Trips Eksisting/Hari", format="%,.0f"),
             "Trips_Ideal_Harian": st.column_config.NumberColumn("Trips Ideal/Hari", format="%,.0f"),
-            "Selisih_Trips_Harian": st.column_config.NumberColumn("Selisih Trips (Surplus/Defisit)", format="%+,.0f")
+            "Selisih_Trips_Harian": st.column_config.NumberColumn("Status Alokasi Trips (Surplus/Defisit)", format="%+,.0f")
         }
     )
+    
+    st.markdown("""
+    ---
+    ### 📌 Rekomendasi Strategis
+    1. **Relokasi Operasional Lintas Terminal:** Mengalokasikan 138 trip/hari dari Blok M serta mengalihkan alokasi perjalanan dari terminal sepi (Klender & Pasar Minggu) ke Manggarai (+216 trip) dan Cililitan (+231 trip) tanpa perlu pengadaan armada baru[cite: 3].
+    2. **Optimalisasi Feeder Rute Transit:** Menata ulang rute bus feeder dari Terminal Gateway (Kampung Rambutan) langsung menuju Transit Hub (Manggarai & Cililitan)[cite: 3].
+    3. **Penyiapan Perjalanan Cadangan (Surge Buffer Planning):** Menerapkan protokol operasional cadangan pada periode lonjakan ekstrem tahunan (April & Mei)[cite: 3].
+    4. **Penjadwalan Maintenance Akhir Pekan:** Memanfaatkan penurunan volume harian di akhir pekan (~20.9%) untuk perawatan berkala[cite: 3].
+    """)
 
 # ==========================================
-# EXPORT REPORT SECTION
+# DOKUMEN RINGKASAN
 # ==========================================
 st.divider()
-st.subheader("📄 Export Executive Report")
-st.caption("Unduh ringkasan hasil analisis dan kalkulasi alokasi bus untuk kebutuhan dokumen formal.")
+st.subheader("📄 Unduh Laporan Ringkasan")
+st.caption("Unduh ringkasan data hasil analisis dan alokasi bus dalam format CSV atau HTML.")
 
 report_summary = filtered_df.groupby('terminal').agg({
     'jumlah_penumpang_berangkat': 'sum',
@@ -370,8 +383,8 @@ html_report = f"""
     </style>
 </head>
 <body>
-    <h1>DKI Jakarta Public Transportation - Summary Analysis Report</h1>
-    <p>Generated automatically from Jakarta Bus Efficiency Dashboard</p>
+    <h1>Laporan Analisis Transportasi Terminal DKI Jakarta</h1>
+    <p>Diunduh secara otomatis dari Dashboard Efisiensi Bus</p>
     <hr>
     {report_summary.to_html(index=False, classes='table')}
 </body>
@@ -381,18 +394,18 @@ html_report = f"""
 col_exp1, col_exp2 = st.columns([1, 4])
 with col_exp1:
     st.download_button(
-        label="📥 Download Summary CSV",
+        label="📥 Unduh Ringkasan CSV",
         data=csv_data,
-        file_name="Jakarta_Bus_Efficiency_Summary.csv",
+        file_name="Ringkasan_Efisiensi_Bus_DKI.csv",
         mime="text/csv",
         use_container_width=True
     )
 
 with col_exp2:
     st.download_button(
-        label="📄 Download Executive Report (HTML/PDF)",
+        label="📄 Unduh Laporan HTML/PDF",
         data=html_report,
-        file_name="Jakarta_Bus_Efficiency_Report.html",
+        file_name="Laporan_Efisiensi_Bus_DKI.html",
         mime="text/html",
         use_container_width=True
     )

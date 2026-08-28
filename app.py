@@ -182,39 +182,37 @@ with tab1:
 # ==========================================
 with tab2:
     st.subheader("Krisis Alokasi Operasional: Overcrowded vs Underutilized")
+    st.caption("Perbandingan keterisian muatan per perjalanan bus untuk mengisolasi terminal krisis.")
     
     mismatch_summary = df.groupby('terminal').agg({
         'jumlah_penumpang_berangkat': 'sum',
         'jumlah_bus_berangkat': 'sum'
     }).reset_index()
     
-    mismatch_summary['load_factor'] = mismatch_summary['jumlah_penumpang_berangkat'] / mismatch_summary['jumlah_bus_berangkat']
-    mismatch_summary = mismatch_summary.sort_values(by='load_factor', ascending=False)
+    mismatch_summary['load_factor'] = (mismatch_summary['jumlah_penumpang_berangkat'] / mismatch_summary['jumlah_bus_berangkat']).round(1)
+    mismatch_summary_sorted = mismatch_summary.sort_values(by='load_factor', ascending=False)
     
-    fig_scatter = px.scatter(
-        mismatch_summary,
-        x='jumlah_bus_berangkat',
-        y='jumlah_penumpang_berangkat',
-        size='load_factor',
+    # Visualisasi Bar Chart Load Factor
+    fig_bar_mismatch = px.bar(
+        mismatch_summary_sorted,
+        x='terminal',
+        y='load_factor',
         color='load_factor',
-        hover_name='terminal',
         color_continuous_scale='Reds',
-        labels={
-            'jumlah_bus_berangkat': 'Frekuensi Trip Bus', 
-            'jumlah_penumpang_berangkat': 'Total Volume Penumpang',
-            'load_factor': 'Load Factor (Pnp/Trip)'
-        },
-        title="Matriks Mismatch Supply vs Demand (Perbandingan Volume vs Frekuensi Bus)"
+        text='load_factor',
+        labels={'terminal': 'Nama Terminal', 'load_factor': 'Load Factor (Penumpang / Trip Bus)'},
+        title="Peringkat Keterisian Bus per Terminal (Batas Standar Ideal = 40)"
     )
-    fig_scatter.update_layout(template="plotly_white")
-    st.plotly_chart(fig_scatter, use_container_width=True)
+    fig_bar_mismatch.add_hline(y=40, line_dash="dash", line_color="#16A34A", annotation_text="Target Ideal (40 pnp/trip)")
+    fig_bar_mismatch.update_layout(template="plotly_white")
+    st.plotly_chart(fig_bar_mismatch, use_container_width=True)
     
     st.markdown("""
     **Temuan Anomali Operasional:**
-    * **Critical Crisis (Manggarai):** Peringkat #2 volume penumpang, tetapi frekuensi bus berada di peringkat #16. Load factor mencapai **276.7 pnp/trip** (7x lipat standar ideal).
-    * **Underutilized / Inefisiensi:** Terminal seperti Klender, Grogol, dan Pasar Minggu melayani < 5 penumpang/trip, menandakan pemborosan armada.
+    * **Overcrowded (Manggarai & Cililitan):** Manggarai mencatatkan keterisian ekstrem **276.7 pnp/trip** (7x lipat batas ideal) akibat minimnya frekuensi keberangkatan bus[cite: 2].
+    * **Underutilized / Pemborosan (Klender, Pasar Minggu, Grogol):** Melayani < 5 penumpang/trip, membuktikan adanya pemborosan perjalanan bus yang bisa dialihkan[cite: 2].
     """)
-
+    
 # ==========================================
 # TAB 3: TIME SERIES & PARETO
 # ==========================================

@@ -9,7 +9,7 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# --- PALET WARNA ENTERPRISE & SAAS MODERN ---
+# --- PALET WARNA ---
 NAVY_DARK = "#0F172A"
 BLUE_PRIMARY = "#2563EB"
 RED_WARNING = "#DC2626"
@@ -223,7 +223,7 @@ with tab1:
 
     st.divider()
 
-    st.subheader("🚌 Evaluasi Lalu Lintas Pergerakan Bus (17 Terminal)")
+    st.subheader("Evaluasi Lalu Lintas Pergerakan Bus (17 Terminal)")
     
     bus_ranking = df.groupby('terminal').agg({
         'jumlah_bus_datang': 'sum',
@@ -261,7 +261,7 @@ with tab1:
     with col_box:
         if is_filtered and selected_terminal == "MANGGARAI":
             st.error("""
-            🚨 **Akar Masalah: Critical Supply Mismatch di Manggarai**
+            **Akar Masalah: Critical Supply Mismatch di Manggarai**
             
             • **Volume Penumpang:** Peringkat **#2** se-DKI Jakarta (8.92 Juta Orang)
             • **Frekuensi Bus:** Peringkat **#16** (Hanya 64.4 Ribu Pergerakan Trips)
@@ -279,7 +279,7 @@ with tab1:
             """)
         else:
             st.error("""
-            🚨 **Akar Masalah: Critical Supply Mismatch di Manggarai**
+            **Akar Masalah: Critical Supply Mismatch di Manggarai**
             
             • **Volume Penumpang:** Peringkat **#2** se-DKI Jakarta (8.92 Juta Orang)
             • **Frekuensi Bus:** Peringkat **#16** (Hanya 64.4 Ribu Pergerakan Trips)

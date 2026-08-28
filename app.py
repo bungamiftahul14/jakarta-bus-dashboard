@@ -146,7 +146,7 @@ tab1, tab2, tab3, tab4, tab5 = st.tabs([
 ])
 
 # ==========================================
-# TAB 1: RANKING & ANOMALI BUS
+# TAB 1: RANKING & ANOMALI BUS (SEKARANG SUDAH INTERAKTIF)
 # ==========================================
 with tab1:
     st.subheader("Ranking Terminal: Top 5 Penumpang vs Evaluasi Pergerakan Bus")
@@ -157,6 +157,14 @@ with tab1:
     top5_berangkat = df.groupby('terminal')['jumlah_penumpang_berangkat'].sum().reset_index().sort_values(by='jumlah_penumpang_berangkat', ascending=False).head(5)
     top5_datang = df.groupby('terminal')['jumlah_penumpang_datang'].sum().reset_index().sort_values(by='jumlah_penumpang_datang', ascending=False).head(5)
     
+    # Pewarnaan Interaktif berdasarkan Terminal yang Dipilih
+    if is_filtered:
+        top5_berangkat['color'] = top5_berangkat['terminal'].apply(lambda x: BLUE_ACCENT if x == selected_terminal else GREY_INACTIVE)
+        top5_datang['color'] = top5_datang['terminal'].apply(lambda x: BLUE_ACCENT if x == selected_terminal else GREY_INACTIVE)
+    else:
+        top5_berangkat['color'] = BLUE_ACCENT
+        top5_datang['color'] = NAVY_PRIMARY
+
     with col_r1:
         fig_top5_berangkat = px.bar(
             top5_berangkat.sort_values(by='jumlah_penumpang_berangkat', ascending=True),
@@ -165,9 +173,10 @@ with tab1:
             orientation='h',
             text_auto='.2s',
             title="Top 5 Terminal Keberangkatan Terbanyak",
-            color_discrete_sequence=[BLUE_ACCENT]
+            color='color',
+            color_discrete_map="identity"
         )
-        fig_top5_berangkat.update_layout(template="plotly_white", xaxis_title="Total Penumpang", yaxis_title="Nama Terminal")
+        fig_top5_berangkat.update_layout(template="plotly_white", xaxis_title="Total Penumpang", yaxis_title="Nama Terminal", showlegend=False)
         st.plotly_chart(fig_top5_berangkat, use_container_width=True, config={'displayModeBar': False})
         
     with col_r2:
@@ -178,9 +187,10 @@ with tab1:
             orientation='h',
             text_auto='.2s',
             title="Top 5 Terminal Kedatangan Terbanyak",
-            color_discrete_sequence=[NAVY_PRIMARY]
+            color='color',
+            color_discrete_map="identity"
         )
-        fig_top5_datang.update_layout(template="plotly_white", xaxis_title="Total Penumpang", yaxis_title="Nama Terminal")
+        fig_top5_datang.update_layout(template="plotly_white", xaxis_title="Total Penumpang", yaxis_title="Nama Terminal", showlegend=False)
         st.plotly_chart(fig_top5_datang, use_container_width=True, config={'displayModeBar': False})
 
     st.divider()
@@ -198,12 +208,18 @@ with tab1:
     bus_ranking['No'] = bus_ranking.index + 1
     bus_ranking['Terminal_Label'] = bus_ranking['terminal'].apply(lambda x: "MANGGARAI (ANOMALI)" if x == "MANGGARAI" else x)
     
+    # Filter Tabel jika terminal tertentu dipilih
+    if is_filtered:
+        display_bus_ranking = bus_ranking[bus_ranking['terminal'] == selected_terminal]
+    else:
+        display_bus_ranking = bus_ranking
+
     col_tbl, col_box = st.columns([6, 4])
     
     with col_tbl:
-        st.markdown("##### Ranking Total Pergerakan Bus (17 Terminal)")
+        st.markdown(f"##### Ranking Total Pergerakan Bus ({'1 Terminal Dipilih' if is_filtered else '17 Terminal'})")
         st.dataframe(
-            bus_ranking[['No', 'Terminal_Label', 'jumlah_bus_datang', 'jumlah_bus_berangkat', 'Total_Trips']],
+            display_bus_ranking[['No', 'Terminal_Label', 'jumlah_bus_datang', 'jumlah_bus_berangkat', 'Total_Trips']],
             use_container_width=True,
             hide_index=True,
             column_config={
@@ -216,14 +232,33 @@ with tab1:
         )
         
     with col_box:
-        st.error("""
-        🚨 **Akar Masalah: Critical Supply Mismatch di Manggarai**
-        
-        • **Volume Penumpang:** Peringkat **#2** se-DKI Jakarta (8.92 Juta Orang)
-        • **Frekuensi Bus:** Peringkat **#16** (Hanya 64.4 Ribu Pergerakan Trips)
-        
-        **Kontradiksi Ekstrem:** Meskipun Manggarai melayani jumlah penumpang terbesar ke-2 se-DKI Jakarta, frekuensi operasional busnya berada di papan bawah (#16 dari 17 terminal). Keterbatasan alokasi bus ini merupakan indikasi utama penumpukan komuter.
-        """)
+        if is_filtered and selected_terminal == "MANGGARAI":
+            st.error("""
+            🚨 **Akar Masalah: Critical Supply Mismatch di Manggarai**
+            
+            • **Volume Penumpang:** Peringkat **#2** se-DKI Jakarta (8.92 Juta Orang)
+            • **Frekuensi Bus:** Peringkat **#16** (Hanya 64.4 Ribu Pergerakan Trips)
+            
+            **Kontradiksi Ekstrem:** Meskipun Manggarai melayani jumlah penumpang terbesar ke-2 se-DKI Jakarta, frekuensi operasional busnya berada di papan bawah (#16 dari 17 terminal). Keterbatasan alokasi bus ini merupakan indikasi utama penumpukan komuter[cite: 1].
+            """)
+        elif is_filtered:
+            selected_rank = display_bus_ranking['No'].values[0]
+            selected_trips = display_bus_ranking['Total_Trips'].values[0]
+            st.info(f"""
+            **Profil Operasional Bus - {selected_terminal}:**
+            
+            • **Peringkat Pergerakan Bus:** #**{selected_rank}** dari 17 Terminal
+            • **Total Pergerakan Bus:** **{selected_trips:,.0f} trips**
+            """)
+        else:
+            st.error("""
+            **Akar Masalah: Critical Supply Mismatch di Manggarai**
+            
+            • **Volume Penumpang:** Peringkat **#2** se-DKI Jakarta (8.92 Juta Orang)
+            • **Frekuensi Bus:** Peringkat **#16** (Hanya 64.4 Ribu Pergerakan Trips)
+            
+            **Kontradiksi Ekstrem:** Meskipun Manggarai melayani jumlah penumpang terbesar ke-2 se-DKI Jakarta, frekuensi operasional busnya berada di papan bawah (#16 dari 17 terminal). Keterbatasan alokasi bus ini merupakan indikasi utama penumpukan komuter[cite: 1].
+            """)
 
 # ==========================================
 # TAB 2: PERAN & ARUS TERMINAL

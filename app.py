@@ -9,16 +9,16 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# --- INSTITUTIONAL ENTERPRISE CSS STYLING ---
+# --- CUSTOM ENTERPRISE CSS STYLING ---
 st.markdown("""
     <style>
-    /* Main Background & Font Styling */
+    /* Background Utama */
     .main {
         background-color: #F8FAFC;
         font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
     }
     
-    /* Header Container */
+    /* Header Container Eksekutif */
     .header-container {
         background-color: #0F172A;
         padding: 24px 32px;
@@ -62,6 +62,18 @@ st.markdown("""
         color: #0F172A;
     }
 
+    /* Callout Card Insight */
+    .insight-card {
+        background-color: #EFF6FF;
+        border-left: 4px solid #2563EB;
+        padding: 16px 20px;
+        border-radius: 4px;
+        margin-bottom: 20px;
+        color: #1E40AF;
+        font-size: 13px;
+        line-height: 1.6;
+    }
+
     /* Tabs Styling */
     .stTabs [data-baseweb="tab-list"] {
         gap: 8px;
@@ -82,7 +94,7 @@ st.markdown("""
         color: #FFFFFF !important;
     }
     
-    /* Hide Streamlit Default Footers & Elements */
+    /* Menyembunyikan Footer Bawaan Streamlit */
     #MainMenu {visibility: hidden;}
     footer {visibility: hidden;}
     </style>
@@ -135,6 +147,16 @@ col4.metric("Total Trips Bus", f"{total_bus_berangkat:,.0f}")
 col5.metric("Avg Load Factor", f"{avg_load_factor:.2f} pnp/trip")
 
 st.markdown("<br>", unsafe_allow_html=True)
+
+# --- INSIGHTS RINGKASAN EKSEKUTIF ---
+st.markdown("""
+    <div class="insight-card">
+        <strong>📌 Key Operational Findings:</strong><br>
+        • <strong>Konsentrasi Beban (Pareto 70/30):</strong> Sebanyak <strong>71.30%</strong> total penumpang se-DKI Jakarta terpusat hanya pada 3 terminal utama (Cililitan, Manggarai, dan Blok M).<br>
+        • <strong>Pemborosan Kapasitas Operasional:</strong> 5 terminal <em>underutilized</em> (Klender, Grogol, Pasar Minggu, Pinang Ranti, Rawamangun) mencatatkan total <strong>548.090 trip bus</strong> dengan rerata &lt; 3 pnp/trip (membuang &gt;92% kapasitas armada).<br>
+        • <strong>Volatilitas Musiman:</strong> Mobilitas Kuartal II melonjak hingga <strong>600% (6x lipat)</strong> dibanding awal Ramadan, memerlukan skema <em>Dynamic Dispatching</em>.
+    </div>
+""", unsafe_allow_html=True)
 
 # --- STRUCTURED TABS ---
 tab1, tab2, tab3, tab4 = st.tabs([
@@ -192,7 +214,6 @@ with tab2:
     mismatch_summary['load_factor'] = (mismatch_summary['jumlah_penumpang_berangkat'] / mismatch_summary['jumlah_bus_berangkat']).round(1)
     mismatch_summary_sorted = mismatch_summary.sort_values(by='load_factor', ascending=False)
     
-    # Visualisasi Bar Chart Load Factor
     fig_bar_mismatch = px.bar(
         mismatch_summary_sorted,
         x='terminal',
@@ -201,18 +222,18 @@ with tab2:
         color_continuous_scale='Reds',
         text='load_factor',
         labels={'terminal': 'Nama Terminal', 'load_factor': 'Load Factor (Penumpang / Trip Bus)'},
-        title="Peringkat Keterisian Bus per Terminal (Batas Standar Ideal = 40)"
+        title="Peringkat Keterisian Bus per Terminal (Batas Standar Ideal = 40 Pnp/Trip)"
     )
     fig_bar_mismatch.add_hline(y=40, line_dash="dash", line_color="#16A34A", annotation_text="Target Ideal (40 pnp/trip)")
     fig_bar_mismatch.update_layout(template="plotly_white")
     st.plotly_chart(fig_bar_mismatch, use_container_width=True)
     
     st.markdown("""
-    **Temuan Anomali Operasional:**
-    * **Overcrowded (Manggarai & Cililitan):** Manggarai mencatatkan keterisian ekstrem **276.7 pnp/trip** (7x lipat batas ideal) akibat minimnya frekuensi keberangkatan bus[cite: 2].
-    * **Underutilized / Pemborosan (Klender, Pasar Minggu, Grogol):** Melayani < 5 penumpang/trip, membuktikan adanya pemborosan perjalanan bus yang bisa dialihkan[cite: 2].
+    **Detail Anomali Operasional:**
+    * **Critical Crisis (Manggarai):** Menampung beban ekstrem **276.7 pnp/trip** (7x lipat batas ideal) akibat keterbatasan alokasi bus (frekuensi bus di peringkat #16 padahal volume penumpang peringkat #2)[cite: 3].
+    * **Underutilized / High Waste (Klender, Pasar Minggu, Grogol):** Melayani < 3 penumpang per perjalanan bus, menyebabkan pemborosan BBM dan sumber daya yang siap dialihkan[cite: 3].
     """)
-    
+
 # ==========================================
 # TAB 3: TIME SERIES & PARETO
 # ==========================================
@@ -249,7 +270,7 @@ with tab3:
         fig_pie = px.pie(
             values=[top3, other],
             names=['Top 3 Terminal (Cililitan, Manggarai, Blok M)', '14 Terminal Lainnya'],
-            title=f"Konsentrasi Beban: Top 3 Menyumbang {top3:.2f}%",
+            title=f"Konsentrasi Beban: Top 3 Menyumbang {top3:.2f}% Penumpang",
             color_discrete_sequence=['#0F172A', '#94A3B8']
         )
         fig_pie.update_layout(template="plotly_white")
@@ -291,10 +312,11 @@ with tab4:
     
     st.markdown("""
     ---
-    ### 📌 Rekomendasi Kebijakan Operasional
-    1. **Relokasi Lintas Terminal:** Alihkan trip surplus dari Blok M serta penyerapan armada dari terminal sepi (Klender, Pasar Minggu) ke Manggarai & Cililitan tanpa perlu pengadaan unit baru[cite: 2].
-    2. **Surge Buffer Planning:** Siapkan armada cadangan khusus Kuartal II (April/Mei) untuk menangani lonjakan puncak komuter/mudik[cite: 2].
-    3. **Maintenance Schedule:** Manfaatkan penurunan volume harian di akhir pekan (~20.9%) untuk perawatan armada berkala[cite: 2].
+    ### 📌 Rekomendasi Kebijakan Strategis
+    1. **Relokasi Operasional Lintas Terminal:** Mengalokasikan 138 trip surplus dari Blok M serta menyerap alokasi perjalanan dari terminal sepi (Klender & Pasar Minggu) ke Manggarai (+216 trip) dan Cililitan (+231 trip) tanpa perlu pengadaan armada baru[cite: 3].
+    2. **Feeder Route Optimization:** Menata ulang rute bus feeder dari Gateway Hub (Kampung Rambutan) langsung ke Transit Hub (Manggarai & Cililitan)[cite: 3].
+    3. **Surge Buffer Planning:** Menyiapkan protokol operasional cadangan khusus Kuartal II (April/Mei) untuk meredam lonjakan komuter[cite: 3].
+    4. **Maintenance Scheduling:** Memanfaatkan penurunan volume harian di akhir pekan (~20.9%) untuk perawatan armada berkala[cite: 3].
     """)
 
 # ==========================================
@@ -315,10 +337,8 @@ report_summary = df.groupby('terminal').agg({
 report_summary['net_flow'] = report_summary['jumlah_penumpang_berangkat'] - report_summary['jumlah_penumpang_datang']
 report_summary['load_factor'] = (report_summary['jumlah_penumpang_berangkat'] / report_summary['jumlah_bus_berangkat']).round(2)
 
-# Convert to CSV
 csv_data = report_summary.to_csv(index=False).encode('utf-8')
 
-# Generate Printable HTML Report
 html_report = f"""
 <html>
 <head>

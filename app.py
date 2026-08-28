@@ -9,7 +9,7 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# --- PALET WARNA MODERN ENTERPRISE ---
+# --- PALET WARNA ENTERPRISE & SAAS MODERN ---
 NAVY_DARK = "#0F172A"
 BLUE_PRIMARY = "#2563EB"
 RED_WARNING = "#DC2626"
@@ -17,7 +17,7 @@ GREY_SLATE = "#CBD5E1"
 GREEN_IDEAL = "#16A34A"
 BG_LIGHT = "#F8FAFC"
 
-# --- CUSTOM ENTERPRISE CSS STYLING ---
+# --- CUSTOM ENTERPRISE CSS (EFEK ELEVASI & SHADOW AGAR NONJOL) ---
 st.markdown(f"""
     <style>
     /* Background Web Clean Neutral */
@@ -26,51 +26,58 @@ st.markdown(f"""
         font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
     }}
     
-    /* Header Utama */
+    /* Header Utama dengan Gradient & Depth */
     .header-container {{
-        background-color: {NAVY_DARK};
-        padding: 24px 32px;
-        border-radius: 8px;
+        background: linear-gradient(135deg, #0F172A 0%, #1E293B 100%);
+        padding: 26px 32px;
+        border-radius: 12px;
         color: #FFFFFF;
         margin-bottom: 24px;
         border-left: 6px solid {BLUE_PRIMARY};
+        box-shadow: 0 4px 14px rgba(15, 23, 42, 0.12);
     }}
     .header-title {{
-        font-size: 24px;
+        font-size: 25px;
         font-weight: 700;
         letter-spacing: -0.02em;
         margin: 0;
         color: #F8FAFC;
     }}
     .header-subtitle {{
-        font-size: 13px;
+        font-size: 13.5px;
         color: #94A3B8;
         margin-top: 4px;
         margin-bottom: 0;
     }}
     
-    /* Kartu Metrik Modern */
+    /* Kartu Metrik dengan Efek Elevation (Lebih Nonjol) */
     div[data-testid="stMetric"] {{
         background-color: #FFFFFF;
         border: 1px solid #E2E8F0;
-        padding: 16px 20px;
-        border-radius: 8px;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+        padding: 18px 20px;
+        border-radius: 10px;
+        border-top: 4px solid {BLUE_PRIMARY};
+        box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }}
+    div[data-testid="stMetric"]:hover {{
+        transform: translateY(-2px);
+        box-shadow: 0 6px 16px rgba(0,0,0,0.08);
     }}
     div[data-testid="stMetricLabel"] {{
-        font-size: 12px;
-        font-weight: 600;
+        font-size: 11.5px;
+        font-weight: 700;
         color: #64748B;
         text-transform: uppercase;
         letter-spacing: 0.05em;
     }}
     div[data-testid="stMetricValue"] {{
-        font-size: 22px;
-        font-weight: 700;
+        font-size: 23px;
+        font-weight: 800;
         color: {NAVY_DARK};
     }}
     
-    /* Navigasi Tab */
+    /* Navigasi Tab Modern */
     .stTabs [data-baseweb="tab-list"] {{
         gap: 8px;
         border-bottom: 2px solid #E2E8F0;
@@ -83,7 +90,7 @@ st.markdown(f"""
         color: #475569;
         font-size: 13px;
         font-weight: 600;
-        padding: 0px 16px;
+        padding: 0px 18px;
     }}
     .stTabs [aria-selected="true"] {{
         background-color: {NAVY_DARK} !important;
@@ -153,12 +160,17 @@ tab1, tab2, tab3, tab4, tab5 = st.tabs([
     "5. Simulasi Relokasi Bus"
 ])
 
-# FUNGSI HELPER UNTUK MENGHILANGKAN KOTAK PUTIH KANVAS PLOTLY
-def make_transparent(fig):
+# FUNGSI HELPER UNTUK MEMBUAT GRAFIK NONJOL DAN TRANSPARAN SEAMLESS
+def make_seamless_chart(fig):
     fig.update_layout(
         paper_bgcolor='rgba(0,0,0,0)',
         plot_bgcolor='rgba(0,0,0,0)',
-        margin=dict(l=10, r=10, t=40, b=10)
+        margin=dict(l=10, r=10, t=40, b=10),
+        font=dict(family="Inter, sans-serif")
+    )
+    fig.update_traces(
+        marker_line_width=1.2,
+        marker_line_color='rgba(15, 23, 42, 0.3)'
     )
     return fig
 
@@ -193,7 +205,7 @@ with tab1:
             color_discrete_map="identity"
         )
         fig_top5_berangkat.update_layout(xaxis_title="Total Penumpang", yaxis_title="Nama Terminal", showlegend=False)
-        st.plotly_chart(make_transparent(fig_top5_berangkat), use_container_width=True, config={'displayModeBar': False})
+        st.plotly_chart(make_seamless_chart(fig_top5_berangkat), use_container_width=True, config={'displayModeBar': False})
         
     with col_r2:
         fig_top5_datang = px.bar(
@@ -207,7 +219,7 @@ with tab1:
             color_discrete_map="identity"
         )
         fig_top5_datang.update_layout(xaxis_title="Total Penumpang", yaxis_title="Nama Terminal", showlegend=False)
-        st.plotly_chart(make_transparent(fig_top5_datang), use_container_width=True, config={'displayModeBar': False})
+        st.plotly_chart(make_seamless_chart(fig_top5_datang), use_container_width=True, config={'displayModeBar': False})
 
     st.divider()
 
@@ -315,7 +327,7 @@ with tab2:
             title="Keberangkatan Lebih Dominan"
         )
         fig_transit.update_layout(showlegend=False)
-        st.plotly_chart(make_transparent(fig_transit), use_container_width=True, config={'displayModeBar': False})
+        st.plotly_chart(make_seamless_chart(fig_transit), use_container_width=True, config={'displayModeBar': False})
         
     with col_t2:
         st.markdown("##### 🟥 Terminal Kedatangan Utama (Lebih Banyak Datang)")
@@ -330,7 +342,7 @@ with tab2:
             title="Kedatangan Lebih Dominan"
         )
         fig_gateway.update_layout(showlegend=False)
-        st.plotly_chart(make_transparent(fig_gateway), use_container_width=True, config={'displayModeBar': False})
+        st.plotly_chart(make_seamless_chart(fig_gateway), use_container_width=True, config={'displayModeBar': False})
 
 # ==========================================
 # TAB 3: KEPADATAN & KETIMPANGAN BUS
@@ -376,7 +388,7 @@ with tab3:
             x='terminal',
             y='load_factor',
             color='load_factor',
-            color_continuous_scale=['#DBEAFE', '#1E40AF', '#991B1B'],
+            color_continuous_scale=['#DBEAFE', '#2563EB', '#991B1B'],
             text='load_factor',
             labels={'terminal': 'Nama Terminal', 'load_factor': 'Rata-rata Penumpang / Bus'},
             title=f"Rata-Rata Penumpang per Bus (Target Ideal = {target_capacity} Penumpang/Bus)"
@@ -388,7 +400,7 @@ with tab3:
         line_color=GREEN_IDEAL, 
         annotation_text=f"Target Ideal ({target_capacity} pnp/bus)"
     )
-    st.plotly_chart(make_transparent(fig_bar_mismatch), use_container_width=True, config={'displayModeBar': False})
+    st.plotly_chart(make_seamless_chart(fig_bar_mismatch), use_container_width=True, config={'displayModeBar': False})
 
 # ==========================================
 # TAB 4: TREN BULANAN & PARETO 70/30
@@ -411,7 +423,7 @@ with tab4:
             title=f"Pergerakan Penumpang Bulanan ({selected_terminal})",
             color_discrete_sequence=[BLUE_PRIMARY]
         )
-        st.plotly_chart(make_transparent(fig_line), use_container_width=True, config={'displayModeBar': False})
+        st.plotly_chart(make_seamless_chart(fig_line), use_container_width=True, config={'displayModeBar': False})
         
     with col_right:
         st.subheader("Prinsip Pareto 70/30 (Pusat Penumpukan)")
@@ -429,7 +441,7 @@ with tab4:
             title=f"3 Terminal Teratas Menyumbang {top3:.2f}% Penumpang",
             color_discrete_sequence=[NAVY_DARK, GREY_SLATE]
         )
-        st.plotly_chart(make_transparent(fig_pie), use_container_width=True, config={'displayModeBar': False})
+        st.plotly_chart(make_seamless_chart(fig_pie), use_container_width=True, config={'displayModeBar': False})
         
         if is_filtered:
             st.caption(f"ℹ️ **Catatan Makro:** Grafik persentase di atas menampilkan proporsi konsentrasi penumpang skala provinsi DKI Jakarta (Top 3 Terminal vs Lainnya)[cite: 1].")

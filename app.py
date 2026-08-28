@@ -9,58 +9,65 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
+# --- PALET WARNA ENTERPRISE ---
+NAVY_PRIMARY = "#0F172A"
+BLUE_ACCENT = "#2563EB"
+RED_ACCENT = "#DC2626"
+GREY_INACTIVE = "#CBD5E1"
+GREEN_TARGET = "#16A34A"
+
 # --- CUSTOM ENTERPRISE CSS STYLING ---
-st.markdown("""
+st.markdown(f"""
     <style>
-    .main {
+    .main {{
         background-color: #F8FAFC;
         font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-    }
-    .header-container {
-        background-color: #0F172A;
+    }}
+    .header-container {{
+        background-color: {NAVY_PRIMARY};
         padding: 24px 32px;
         border-radius: 8px;
         color: #FFFFFF;
         margin-bottom: 24px;
-        border-left: 6px solid #2563EB;
-    }
-    .header-title {
+        border-left: 6px solid {BLUE_ACCENT};
+    }}
+    .header-title {{
         font-size: 24px;
         font-weight: 700;
         letter-spacing: -0.02em;
         margin: 0;
         color: #F8FAFC;
-    }
-    .header-subtitle {
+    }}
+    .header-subtitle {{
         font-size: 13px;
         color: #94A3B8;
         margin-top: 4px;
         margin-bottom: 0;
-    }
-    div[data-testid="stMetric"] {
+    }}
+    div[data-testid="stMetric"] {{
         background-color: #FFFFFF;
         border: 1px solid #E2E8F0;
         padding: 16px 20px;
         border-radius: 8px;
         box-shadow: 0 1px 3px rgba(0,0,0,0.05);
-    }
-    div[data-testid="stMetricLabel"] {
+    }}
+    div[data-testid="stMetricLabel"] {{
         font-size: 12px;
         font-weight: 600;
         color: #64748B;
         text-transform: uppercase;
         letter-spacing: 0.05em;
-    }
-    div[data-testid="stMetricValue"] {
+    }}
+    div[data-testid="stMetricValue"] {{
         font-size: 22px;
         font-weight: 700;
-        color: #0F172A;
-    }
-    .stTabs [data-baseweb="tab-list"] {
+        color: {NAVY_PRIMARY};
+    }}
+    .stTabs [data-baseweb="tab-list"] {{
         gap: 8px;
         border-bottom: 2px solid #E2E8F0;
-    }
-    .stTabs [data-baseweb="tab"] {
+    }}
+    .stTabs [data-baseweb="tab"] {{
         height: 44px;
         white-space: pre-wrap;
         background-color: #F1F5F9;
@@ -69,13 +76,13 @@ st.markdown("""
         font-size: 13px;
         font-weight: 600;
         padding: 0px 16px;
-    }
-    .stTabs [aria-selected="true"] {
-        background-color: #0F172A !important;
+    }}
+    .stTabs [aria-selected="true"] {{
+        background-color: {NAVY_PRIMARY} !important;
         color: #FFFFFF !important;
-    }
-    #MainMenu {visibility: hidden;}
-    footer {visibility: hidden;}
+    }}
+    #MainMenu {{visibility: hidden;}}
+    footer {{visibility: hidden;}}
     </style>
 """, unsafe_allow_html=True)
 
@@ -139,13 +146,12 @@ tab1, tab2, tab3, tab4, tab5 = st.tabs([
 ])
 
 # ==========================================
-# TAB 1: RANKING & ANOMALI BUS (SESUAI PORTOFOLIO)
+# TAB 1: RANKING & ANOMALI BUS
 # ==========================================
 with tab1:
     st.subheader("Ranking Terminal: Top 5 Penumpang vs Evaluasi Pergerakan Bus")
-    st.caption("Perbandingan antara volume penumpang dengan frekuensi pergerakan bus untuk menemukan titik ketimpangan operasional.")
+    st.caption("Perbandingan antara volume penumpang dengan frekuensi pergerakan bus untuk menemukan titik ketimpangan operasional[cite: 1].")
     
-    # 1. Top 5 Keberangkatan & Kedatangan
     col_r1, col_r2 = st.columns(2)
     
     top5_berangkat = df.groupby('terminal')['jumlah_penumpang_berangkat'].sum().reset_index().sort_values(by='jumlah_penumpang_berangkat', ascending=False).head(5)
@@ -159,10 +165,10 @@ with tab1:
             orientation='h',
             text_auto='.2s',
             title="Top 5 Terminal Keberangkatan Terbanyak",
-            color_discrete_sequence=['#1E3A8A']
+            color_discrete_sequence=[BLUE_ACCENT]
         )
         fig_top5_berangkat.update_layout(template="plotly_white", xaxis_title="Total Penumpang", yaxis_title="Nama Terminal")
-        st.plotly_chart(fig_top5_berangkat, use_container_width=True)
+        st.plotly_chart(fig_top5_berangkat, use_container_width=True, config={'displayModeBar': False})
         
     with col_r2:
         fig_top5_datang = px.bar(
@@ -172,15 +178,14 @@ with tab1:
             orientation='h',
             text_auto='.2s',
             title="Top 5 Terminal Kedatangan Terbanyak",
-            color_discrete_sequence=['#1E3A8A']
+            color_discrete_sequence=[NAVY_PRIMARY]
         )
         fig_top5_datang.update_layout(template="plotly_white", xaxis_title="Total Penumpang", yaxis_title="Nama Terminal")
-        st.plotly_chart(fig_top5_datang, use_container_width=True)
+        st.plotly_chart(fig_top5_datang, use_container_width=True, config={'displayModeBar': False})
 
     st.divider()
 
-    # 2. Ranking Total Pergerakan Bus 17 Terminal & Anomali Manggarai
-    st.subheader(" Evaluasi Lalu Lintas Pergerakan Bus (17 Terminal)")
+    st.subheader("🚌 Evaluasi Lalu Lintas Pergerakan Bus (17 Terminal)")
     
     bus_ranking = df.groupby('terminal').agg({
         'jumlah_bus_datang': 'sum',
@@ -191,8 +196,6 @@ with tab1:
     bus_ranking['Total_Trips'] = bus_ranking['jumlah_bus_datang'] + bus_ranking['jumlah_bus_berangkat']
     bus_ranking = bus_ranking.sort_values(by='Total_Trips', ascending=False).reset_index(drop=True)
     bus_ranking['No'] = bus_ranking.index + 1
-    
-    # Penanda Anomali Manggarai
     bus_ranking['Terminal_Label'] = bus_ranking['terminal'].apply(lambda x: "MANGGARAI (ANOMALI)" if x == "MANGGARAI" else x)
     
     col_tbl, col_box = st.columns([6, 4])
@@ -227,7 +230,7 @@ with tab1:
 # ==========================================
 with tab2:
     st.subheader("Analisis Selisih Arus Penumpang")
-    st.caption("Perhitungan selisih penumpang memisahkan terminal yang lebih banyak memberangkatkan penumpang vs terminal tempat kedatangan.")
+    st.caption("Perhitungan selisih penumpang memisahkan terminal yang lebih banyak memberangkatkan penumpang vs terminal tempat kedatangan[cite: 1].")
     
     hub_summary = df.groupby('terminal').agg({
         'jumlah_penumpang_datang': 'sum',
@@ -241,11 +244,11 @@ with tab2:
     gateway_df['net_flow_abs'] = gateway_df['net_flow'].abs()
     
     if is_filtered:
-        transit_df['color'] = transit_df['terminal'].apply(lambda x: '#2563EB' if x == selected_terminal else '#CBD5E1')
-        gateway_df['color'] = gateway_df['terminal'].apply(lambda x: '#E11D48' if x == selected_terminal else '#CBD5E1')
+        transit_df['color'] = transit_df['terminal'].apply(lambda x: BLUE_ACCENT if x == selected_terminal else GREY_INACTIVE)
+        gateway_df['color'] = gateway_df['terminal'].apply(lambda x: RED_ACCENT if x == selected_terminal else GREY_INACTIVE)
     else:
-        transit_df['color'] = '#0284C7'
-        gateway_df['color'] = '#E11D48'
+        transit_df['color'] = BLUE_ACCENT
+        gateway_df['color'] = RED_ACCENT
     
     col_t1, col_t2 = st.columns(2)
     
@@ -258,11 +261,11 @@ with tab2:
             text_auto='.2s',
             color='color',
             color_discrete_map="identity",
-            labels={'terminal': 'Nama Terminal', 'net_flow': 'Selisih Penumpang (Berangkat - Datang)'},
+            labels={'terminal': 'Nama Terminal', 'net_flow': 'Selisih Penumpang'},
             title="Keberangkatan Lebih Dominan"
         )
         fig_transit.update_layout(template="plotly_white", showlegend=False)
-        st.plotly_chart(fig_transit, use_container_width=True)
+        st.plotly_chart(fig_transit, use_container_width=True, config={'displayModeBar': False})
         
     with col_t2:
         st.markdown("##### 🟥 Terminal Kedatangan Utama (Lebih Banyak Datang)")
@@ -273,18 +276,18 @@ with tab2:
             text_auto='.2s',
             color='color',
             color_discrete_map="identity",
-            labels={'terminal': 'Nama Terminal', 'net_flow_abs': 'Selisih Penumpang (Datang - Berangkat)'},
+            labels={'terminal': 'Nama Terminal', 'net_flow_abs': 'Selisih Penumpang'},
             title="Kedatangan Lebih Dominan"
         )
         fig_gateway.update_layout(template="plotly_white", showlegend=False)
-        st.plotly_chart(fig_gateway, use_container_width=True)
+        st.plotly_chart(fig_gateway, use_container_width=True, config={'displayModeBar': False})
 
 # ==========================================
 # TAB 3: KEPADATAN & KETIMPANGAN BUS
 # ==========================================
 with tab3:
     st.subheader("Evaluasi Kepadatan Penumpang per Bus")
-    st.caption("Membandingkan jumlah penumpang per bus di setiap terminal untuk melihat terminal yang terlalu padat vs terminal yang sepi.")
+    st.caption("Membandingkan jumlah penumpang per bus di setiap terminal untuk melihat terminal yang terlalu padat vs terminal yang sepi[cite: 1].")
     
     target_capacity = st.slider(
         "Tentukan Target Penumpang Ideal per Bus:", 
@@ -305,7 +308,7 @@ with tab3:
     
     if is_filtered:
         mismatch_summary_sorted['color'] = mismatch_summary_sorted['terminal'].apply(
-            lambda x: '#DC2626' if x == selected_terminal else '#CBD5E1'
+            lambda x: RED_ACCENT if x == selected_terminal else GREY_INACTIVE
         )
         fig_bar_mismatch = px.bar(
             mismatch_summary_sorted,
@@ -323,7 +326,7 @@ with tab3:
             x='terminal',
             y='load_factor',
             color='load_factor',
-            color_continuous_scale='Reds',
+            color_continuous_scale=['#DBEAFE', '#2563EB', '#991B1B'],
             text='load_factor',
             labels={'terminal': 'Nama Terminal', 'load_factor': 'Rata-rata Penumpang / Bus'},
             title=f"Rata-Rata Penumpang per Bus (Target Ideal = {target_capacity} Penumpang/Bus)"
@@ -332,11 +335,11 @@ with tab3:
     fig_bar_mismatch.add_hline(
         y=target_capacity, 
         line_dash="dash", 
-        line_color="#16A34A", 
+        line_color=GREEN_TARGET, 
         annotation_text=f"Target Ideal ({target_capacity} pnp/bus)"
     )
     fig_bar_mismatch.update_layout(template="plotly_white")
-    st.plotly_chart(fig_bar_mismatch, use_container_width=True)
+    st.plotly_chart(fig_bar_mismatch, use_container_width=True, config={'displayModeBar': False})
 
 # ==========================================
 # TAB 4: TREN BULANAN & PARETO 70/30
@@ -356,10 +359,11 @@ with tab4:
             x='tanggal_lengkap', 
             y='jumlah_penumpang_berangkat', 
             markers=True,
-            title=f"Pergerakan Penumpang Bulanan ({selected_terminal})"
+            title=f"Pergerakan Penumpang Bulanan ({selected_terminal})",
+            color_discrete_sequence=[BLUE_ACCENT]
         )
         fig_line.update_layout(template="plotly_white")
-        st.plotly_chart(fig_line, use_container_width=True)
+        st.plotly_chart(fig_line, use_container_width=True, config={'displayModeBar': False})
         
     with col_right:
         st.subheader("Prinsip Pareto 70/30 (Pusat Penumpukan)")
@@ -375,13 +379,13 @@ with tab4:
             values=[top3, other],
             names=['3 Terminal Teratas (Cililitan, Manggarai, Blok M)', '14 Terminal Lainnya'],
             title=f"3 Terminal Teratas Menyumbang {top3:.2f}% Penumpang",
-            color_discrete_sequence=['#0F172A', '#94A3B8']
+            color_discrete_sequence=[NAVY_PRIMARY, GREY_INACTIVE]
         )
         fig_pie.update_layout(template="plotly_white")
-        st.plotly_chart(fig_pie, use_container_width=True)
+        st.plotly_chart(fig_pie, use_container_width=True, config={'displayModeBar': False})
         
         if is_filtered:
-            st.caption(f"ℹ️ **Catatan Makro:** Grafik persentase di atas menampilkan proporsi konsentrasi penumpang skala provinsi DKI Jakarta (Top 3 Terminal vs Lainnya).")
+            st.caption(f"ℹ️ **Catatan Makro:** Grafik persentase di atas menampilkan proporsi konsentrasi penumpang skala provinsi DKI Jakarta (Top 3 Terminal vs Lainnya)[cite: 1].")
 
 # ==========================================
 # TAB 5: SIMULASI RELOKASI BUS
@@ -438,7 +442,7 @@ with tab5:
         st.info(f"""
         📌 **Ringkasan Alokasi Bus Se-Jakarta (Target: {target_capacity_tab5} penumpang/bus):**  
         • **Terminal Kekurangan Bus (Defisit):** {', '.join(defisits)}  
-        • **Terminal Kelebihan Bus (Surplus):** {len(surpluses)} terminal lain memiliki armada berlebih yang bisa dialihkan secara efisien.
+        • **Terminal Kelebihan Bus (Surplus):** {len(surpluses)} terminal lain memiliki armada berlebih yang bisa dialihkan secara efisien[cite: 1].
         """)
         
     st.dataframe(

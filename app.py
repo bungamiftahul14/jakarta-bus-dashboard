@@ -105,15 +105,6 @@ st.sidebar.markdown("### Panel Kontrol")
 terminal_list = ["Seluruh Terminal"] + sorted(list(df['terminal'].dropna().unique()))
 selected_terminal = st.sidebar.selectbox("Pilih Terminal:", terminal_list)
 
-# Slider Target Kapasitas ditaruh di Sidebar agar berlaku untuk Tab 2 dan Tab 4 sekaligus
-target_capacity = st.sidebar.slider(
-    "Target Penumpang per Bus (Kapasitas Ideal):", 
-    min_value=20, 
-    max_value=60, 
-    value=40,
-    step=5
-)
-
 if selected_terminal != "Seluruh Terminal":
     filtered_df = df[df['terminal'] == selected_terminal]
     is_filtered = True
@@ -151,7 +142,7 @@ tab1, tab2, tab3, tab4 = st.tabs([
 # ==========================================
 with tab1:
     st.subheader("Analisis Selisih Arus Penumpang")
-    st.caption("Perhitungan selisih penumpang memisahkan terminal yang lebih banyak memberangkatkan penumpang vs terminal tempat kedatangan[cite: 3].")
+    st.caption("Perhitungan selisih penumpang memisahkan terminal yang lebih banyak memberangkatkan penumpang vs terminal tempat kedatangan.")
     
     hub_summary = df.groupby('terminal').agg({
         'jumlah_penumpang_datang': 'sum',
@@ -208,7 +199,17 @@ with tab1:
 # ==========================================
 with tab2:
     st.subheader("Evaluasi Kepadatan Penumpang per Bus")
-    st.caption("Membandingkan jumlah penumpang per bus di setiap terminal untuk melihat terminal yang terlalu padat vs terminal yang sepi[cite: 3].")
+    st.caption("Membandingkan jumlah penumpang per bus di setiap terminal untuk melihat terminal yang terlalu padat vs terminal yang sepi.")
+    
+    # Opsi slider di Tab 2
+    target_capacity = st.slider(
+        "Tentukan Target Penumpang Ideal per Bus:", 
+        min_value=20, 
+        max_value=60, 
+        value=40,
+        step=5,
+        key="slider_tab2"
+    )
     
     mismatch_summary = df.groupby('terminal').agg({
         'jumlah_penumpang_berangkat': 'sum',
@@ -244,7 +245,6 @@ with tab2:
             title=f"Rata-Rata Penumpang per Bus (Target Ideal = {target_capacity} Penumpang/Bus)"
         )
         
-    # Garis batas ideal secara dinamis mengikuti target_capacity dari slider
     fig_bar_mismatch.add_hline(
         y=target_capacity, 
         line_dash="dash", 
@@ -290,7 +290,7 @@ with tab3:
         fig_pie = px.pie(
             values=[top3, other],
             names=['3 Terminal Teratas (Cililitan, Manggarai, Blok M)', '14 Terminal Lainnya'],
-            title=f"3 Terminal Teratas Menyumbang {top3:.2f}% Penumpang[cite: 3]",
+            title=f"3 Terminal Teratas Menyumbang {top3:.2f}% Penumpang",
             color_discrete_sequence=['#0F172A', '#94A3B8']
         )
         fig_pie.update_layout(template="plotly_white")
@@ -300,7 +300,17 @@ with tab3:
 # TAB 4: SIMULASI RELOKASI BUS
 # ==========================================
 with tab4:
-    st.subheader(f"Simulasi Alokasi Bus Ideal (Target: {target_capacity} Penumpang/Bus)")
+    st.subheader("Simulasi Alokasi Bus Ideal")
+    
+    # Opsi slider di Tab 4
+    target_capacity_tab4 = st.slider(
+        "Tentukan Target Penumpang Ideal per Bus:", 
+        min_value=20, 
+        max_value=60, 
+        value=40,
+        step=5,
+        key="slider_tab4"
+    )
     
     sim_df = df.groupby('terminal').agg({
         'jumlah_penumpang_berangkat': 'mean',
@@ -310,7 +320,7 @@ with tab4:
     sim_df.columns = ['Terminal', 'Rata_Pnp_Harian', 'Trips_Eksisting_Harian']
     sim_df['Rata_Pnp_Harian'] = sim_df['Rata_Pnp_Harian'].round(0)
     sim_df['Trips_Eksisting_Harian'] = sim_df['Trips_Eksisting_Harian'].round(0)
-    sim_df['Trips_Ideal_Harian'] = (sim_df['Rata_Pnp_Harian'] / target_capacity).round(0)
+    sim_df['Trips_Ideal_Harian'] = (sim_df['Rata_Pnp_Harian'] / target_capacity_tab4).round(0)
     sim_df['Selisih_Trips_Harian'] = sim_df['Trips_Eksisting_Harian'] - sim_df['Trips_Ideal_Harian']
     sim_df['Status_Alokasi'] = sim_df['Selisih_Trips_Harian'].apply(lambda x: 'SURPLUS' if x >= 0 else 'DEFISIT')
     
@@ -329,21 +339,21 @@ with tab4:
             st.error(f"""
             📌 **Analisis Kebutuhan Bus - {selected_terminal}:**  
             Terminal ini melayani rata-rata **{pnp:,.0f} penumpang/hari** dengan **{exist_trips:,.0f} keberangkatan bus/hari** (Rata-rata saat ini: **{pnp/exist_trips:.1f} penumpang/bus**).  
-            Dengan target **{target_capacity} penumpang/bus**, terminal ini mengalami **KEKURANGAN (DEFISIT) {abs(diff):,.0f} BUS/HARI**.
+            Dengan target **{target_capacity_tab4} penumpang/bus**, terminal ini mengalami **KEKURANGAN (DEFISIT) {abs(diff):,.0f} BUS/HARI**.
             """)
         else:
             st.success(f"""
             📌 **Analisis Kebutuhan Bus - {selected_terminal}:**  
             Terminal ini melayani rata-rata **{pnp:,.0f} penumpang/hari** dengan **{exist_trips:,.0f} keberangkatan bus/hari** (Rata-rata saat ini: **{pnp/exist_trips:.1f} penumpang/bus**).  
-            Dengan target **{target_capacity} penumpang/bus**, terminal ini memiliki **KELEBIHAN (SURPLUS) {diff:,.0f} BUS/HARI** yang bisa dialihkan ke terminal lain.
+            Dengan target **{target_capacity_tab4} penumpang/bus**, terminal ini memiliki **KELEBIHAN (SURPLUS) {diff:,.0f} BUS/HARI** yang bisa dialihkan ke terminal lain.
             """)
     else:
         defisits = sim_df[sim_df['Status_Alokasi'] == 'DEFISIT']['Terminal'].tolist()
         surpluses = sim_df[sim_df['Status_Alokasi'] == 'SURPLUS']['Terminal'].tolist()
         st.info(f"""
-        📌 **Ringkasan Alokasi Bus Se-Jakarta (Target: {target_capacity} penumpang/bus):**  
+        📌 **Ringkasan Alokasi Bus Se-Jakarta (Target: {target_capacity_tab4} penumpang/bus):**  
         • **Terminal Kekurangan Bus (Defisit):** {', '.join(defisits)}  
-        • **Terminal Kelebihan Bus (Surplus):** {len(surpluses)} terminal lain memiliki armada berlebih yang bisa dialihkan secara efisien[cite: 3].
+        • **Terminal Kelebihan Bus (Surplus):** {len(surpluses)} terminal lain memiliki armada berlebih yang bisa dialihkan secara efisien.
         """)
         
     st.dataframe(

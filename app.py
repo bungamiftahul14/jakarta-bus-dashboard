@@ -11,17 +11,16 @@ st.set_page_config(
 
 # --- PALET WARNA MODERN ENTERPRISE ---
 NAVY_DARK = "#0F172A"
-BLUE_PRIMARY = "#1E40AF"
-BLUE_LIGHT = "#3B82F6"
-RED_WARNING = "#B91C1C"
+BLUE_PRIMARY = "#2563EB"
+RED_WARNING = "#DC2626"
 GREY_SLATE = "#CBD5E1"
-GREEN_IDEAL = "#15803D"
-BG_LIGHT = "#F1F5F9"
+GREEN_IDEAL = "#16A34A"
+BG_LIGHT = "#F8FAFC"
 
 # --- CUSTOM ENTERPRISE CSS STYLING ---
 st.markdown(f"""
     <style>
-    /* Background Web Modern Soft Slate */
+    /* Background Web Clean Neutral */
     .stApp {{
         background-color: {BG_LIGHT};
         font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
@@ -29,64 +28,62 @@ st.markdown(f"""
     
     /* Header Utama */
     .header-container {{
-        background: linear-gradient(135deg, #0F172A 0%, #1E293B 100%);
-        padding: 28px 36px;
-        border-radius: 12px;
+        background-color: {NAVY_DARK};
+        padding: 24px 32px;
+        border-radius: 8px;
         color: #FFFFFF;
         margin-bottom: 24px;
-        box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08);
-        border-left: 6px solid {BLUE_LIGHT};
+        border-left: 6px solid {BLUE_PRIMARY};
     }}
     .header-title {{
-        font-size: 26px;
+        font-size: 24px;
         font-weight: 700;
         letter-spacing: -0.02em;
         margin: 0;
         color: #F8FAFC;
     }}
     .header-subtitle {{
-        font-size: 13.5px;
+        font-size: 13px;
         color: #94A3B8;
-        margin-top: 6px;
+        margin-top: 4px;
         margin-bottom: 0;
     }}
     
-    /* Kartu Metrik Modern Elevation */
+    /* Kartu Metrik Modern */
     div[data-testid="stMetric"] {{
         background-color: #FFFFFF;
         border: 1px solid #E2E8F0;
-        padding: 18px 22px;
-        border-radius: 10px;
-        box-shadow: 0 2px 6px rgba(0,0,0,0.04);
-        border-top: 4px solid {BLUE_PRIMARY};
+        padding: 16px 20px;
+        border-radius: 8px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.04);
     }}
     div[data-testid="stMetricLabel"] {{
-        font-size: 11.5px;
-        font-weight: 700;
+        font-size: 12px;
+        font-weight: 600;
         color: #64748B;
         text-transform: uppercase;
-        letter-spacing: 0.06em;
+        letter-spacing: 0.05em;
     }}
     div[data-testid="stMetricValue"] {{
-        font-size: 23px;
-        font-weight: 800;
+        font-size: 22px;
+        font-weight: 700;
         color: {NAVY_DARK};
     }}
     
-    /* Navigasi Tab Modern */
+    /* Navigasi Tab */
     .stTabs [data-baseweb="tab-list"] {{
         gap: 8px;
         border-bottom: 2px solid #E2E8F0;
     }}
     .stTabs [data-baseweb="tab"] {{
-        height: 46px;
+        height: 44px;
         white-space: pre-wrap;
-        background-color: #E2E8F0;
-        border-radius: 8px 8px 0px 0px;
+        background-color: #F1F5F9;
+        border-radius: 6px 6px 0px 0px;
         color: #475569;
         font-size: 13px;
         font-weight: 600;
-        padding: 0px 20px;
+        padding: 0px 16px;
     }}
     .stTabs [aria-selected="true"] {{
         background-color: {NAVY_DARK} !important;
@@ -156,6 +153,15 @@ tab1, tab2, tab3, tab4, tab5 = st.tabs([
     "5. Simulasi Relokasi Bus"
 ])
 
+# FUNGSI HELPER UNTUK MENGHILANGKAN KOTAK PUTIH KANVAS PLOTLY
+def make_transparent(fig):
+    fig.update_layout(
+        paper_bgcolor='rgba(0,0,0,0)',
+        plot_bgcolor='rgba(0,0,0,0)',
+        margin=dict(l=10, r=10, t=40, b=10)
+    )
+    return fig
+
 # ==========================================
 # TAB 1: RANKING & ANOMALI BUS
 # ==========================================
@@ -186,8 +192,8 @@ with tab1:
             color='color',
             color_discrete_map="identity"
         )
-        fig_top5_berangkat.update_layout(template="plotly_white", xaxis_title="Total Penumpang", yaxis_title="Nama Terminal", showlegend=False)
-        st.plotly_chart(fig_top5_berangkat, use_container_width=True, config={'displayModeBar': False})
+        fig_top5_berangkat.update_layout(xaxis_title="Total Penumpang", yaxis_title="Nama Terminal", showlegend=False)
+        st.plotly_chart(make_transparent(fig_top5_berangkat), use_container_width=True, config={'displayModeBar': False})
         
     with col_r2:
         fig_top5_datang = px.bar(
@@ -200,8 +206,8 @@ with tab1:
             color='color',
             color_discrete_map="identity"
         )
-        fig_top5_datang.update_layout(template="plotly_white", xaxis_title="Total Penumpang", yaxis_title="Nama Terminal", showlegend=False)
-        st.plotly_chart(fig_top5_datang, use_container_width=True, config={'displayModeBar': False})
+        fig_top5_datang.update_layout(xaxis_title="Total Penumpang", yaxis_title="Nama Terminal", showlegend=False)
+        st.plotly_chart(make_transparent(fig_top5_datang), use_container_width=True, config={'displayModeBar': False})
 
     st.divider()
 
@@ -308,8 +314,8 @@ with tab2:
             labels={'terminal': 'Nama Terminal', 'net_flow': 'Selisih Penumpang'},
             title="Keberangkatan Lebih Dominan"
         )
-        fig_transit.update_layout(template="plotly_white", showlegend=False)
-        st.plotly_chart(fig_transit, use_container_width=True, config={'displayModeBar': False})
+        fig_transit.update_layout(showlegend=False)
+        st.plotly_chart(make_transparent(fig_transit), use_container_width=True, config={'displayModeBar': False})
         
     with col_t2:
         st.markdown("##### 🟥 Terminal Kedatangan Utama (Lebih Banyak Datang)")
@@ -323,8 +329,8 @@ with tab2:
             labels={'terminal': 'Nama Terminal', 'net_flow_abs': 'Selisih Penumpang'},
             title="Kedatangan Lebih Dominan"
         )
-        fig_gateway.update_layout(template="plotly_white", showlegend=False)
-        st.plotly_chart(fig_gateway, use_container_width=True, config={'displayModeBar': False})
+        fig_gateway.update_layout(showlegend=False)
+        st.plotly_chart(make_transparent(fig_gateway), use_container_width=True, config={'displayModeBar': False})
 
 # ==========================================
 # TAB 3: KEPADATAN & KETIMPANGAN BUS
@@ -382,8 +388,7 @@ with tab3:
         line_color=GREEN_IDEAL, 
         annotation_text=f"Target Ideal ({target_capacity} pnp/bus)"
     )
-    fig_bar_mismatch.update_layout(template="plotly_white")
-    st.plotly_chart(fig_bar_mismatch, use_container_width=True, config={'displayModeBar': False})
+    st.plotly_chart(make_transparent(fig_bar_mismatch), use_container_width=True, config={'displayModeBar': False})
 
 # ==========================================
 # TAB 4: TREN BULANAN & PARETO 70/30
@@ -406,8 +411,7 @@ with tab4:
             title=f"Pergerakan Penumpang Bulanan ({selected_terminal})",
             color_discrete_sequence=[BLUE_PRIMARY]
         )
-        fig_line.update_layout(template="plotly_white")
-        st.plotly_chart(fig_line, use_container_width=True, config={'displayModeBar': False})
+        st.plotly_chart(make_transparent(fig_line), use_container_width=True, config={'displayModeBar': False})
         
     with col_right:
         st.subheader("Prinsip Pareto 70/30 (Pusat Penumpukan)")
@@ -425,8 +429,7 @@ with tab4:
             title=f"3 Terminal Teratas Menyumbang {top3:.2f}% Penumpang",
             color_discrete_sequence=[NAVY_DARK, GREY_SLATE]
         )
-        fig_pie.update_layout(template="plotly_white")
-        st.plotly_chart(fig_pie, use_container_width=True, config={'displayModeBar': False})
+        st.plotly_chart(make_transparent(fig_pie), use_container_width=True, config={'displayModeBar': False})
         
         if is_filtered:
             st.caption(f"ℹ️ **Catatan Makro:** Grafik persentase di atas menampilkan proporsi konsentrasi penumpang skala provinsi DKI Jakarta (Top 3 Terminal vs Lainnya)[cite: 1].")

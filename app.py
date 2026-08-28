@@ -353,10 +353,10 @@ with tab3:
     
     target_capacity = st.slider(
         "Tentukan Target Penumpang Ideal per Bus:", 
-        min_value=20, 
-        max_value=60, 
+        min_value=10, 
+        max_value=100, 
         value=40,
-        step=5,
+        step=1,
         key="slider_tab3"
     )
     
@@ -469,10 +469,10 @@ with tab5:
     
     target_capacity_tab5 = st.slider(
         "Tentukan Target Penumpang Ideal per Bus:", 
-        min_value=20, 
-        max_value=60, 
+        min_value=10, 
+        max_value=100, 
         value=40,
-        step=5,
+        step=1,
         key="slider_tab5"
     )
     

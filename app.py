@@ -56,16 +56,6 @@ st.markdown("""
         font-weight: 700;
         color: #0F172A;
     }
-    .insight-card {
-        background-color: #EFF6FF;
-        border-left: 4px solid #2563EB;
-        padding: 16px 20px;
-        border-radius: 4px;
-        margin-bottom: 20px;
-        color: #1E40AF;
-        font-size: 13px;
-        line-height: 1.6;
-    }
     .stTabs [data-baseweb="tab-list"] {
         gap: 8px;
         border-bottom: 2px solid #E2E8F0;
@@ -139,15 +129,12 @@ col5.metric("Rata-Rata Load Factor", f"{avg_load_factor:.2f} pnp/bus")
 
 st.markdown("<br>", unsafe_allow_html=True)
 
-if is_filtered:
-    st.info(f"🎯 **Mode Sorot Aktif:** Menampilkan posisi relatif **{selected_terminal}** di antara 17 terminal DKI Jakarta.")
-
 # --- STRUCTURED TABS ---
 tab1, tab2, tab3, tab4 = st.tabs([
     "1. Peran & Arus Terminal", 
     "2. Analisis Load Factor & Mismatch", 
     "3. Tren Bulanan & Pareto 70/30", 
-    "4. Simulasi Relokasi Bus & Rekomendasi"
+    "4. Simulasi Relokasi Bus"
 ])
 
 # ==========================================
@@ -252,12 +239,6 @@ with tab2:
     fig_bar_mismatch.update_layout(template="plotly_white")
     st.plotly_chart(fig_bar_mismatch, use_container_width=True)
 
-    st.markdown("""
-    **Temuan Analisis:**
-    * **Kategori Overloaded Ekstrem (Critical Mismatch):** Manggarai menampung beban hingga **276.7 penumpang/keberangkatan** (7x lipat batas ideal) karena frekuensi bus berada di peringkat #16 meskipun melayani penumpang terbesar ke-2[cite: 3].
-    * **Kategori Underutilized (Pemborosan Operasional):** Terminal Klender, Pasar Minggu, Grogol, Pinang Ranti, dan Rawamangun mencatatkan tingkat keterisian **< 5 penumpang per bus**[cite: 3].
-    """)
-
 # ==========================================
 # TAB 3: TREN BULANAN & PARETO 70/30
 # ==========================================
@@ -301,10 +282,10 @@ with tab3:
         st.plotly_chart(fig_pie, use_container_width=True)
 
 # ==========================================
-# TAB 4: SIMULASI RELOKASI BUS & REKOMENDASI
+# TAB 4: SIMULASI RELOKASI BUS
 # ==========================================
 with tab4:
-    st.subheader("Simulasi Alokasi Bus Ideal & Relokasi Sumber Daya")
+    st.subheader("Simulasi Alokasi Bus Ideal & Evaluasi Kebutuhan")
     
     target_capacity = st.slider("Tentukan Standar Kapasitas Ideal per Bus (Penumpang/Trip):", min_value=20, max_value=60, value=40)
     
@@ -322,13 +303,36 @@ with tab4:
     
     sim_df_sorted = sim_df.sort_values(by='Selisih_Trips_Harian')
     
+    # --- INSIGHT DINAMIS BERDASARKAN FILTER TERMINAL ---
     if is_filtered:
-        st.info(f"Hasil Evaluasi Kebutuhan Bus Ideal untuk **{selected_terminal}**:")
-        spec_row = sim_df[sim_df['Terminal'] == selected_terminal]
-        st.dataframe(spec_row, use_container_width=True, hide_index=True)
-        st.markdown("---")
-        st.caption("Tabel Alokasi Seluruh Terminal:")
-    
+        t_data = sim_df[sim_df['Terminal'] == selected_terminal].iloc[0]
+        pnp = t_data['Rata_Pnp_Harian']
+        exist_trips = t_data['Trips_Eksisting_Harian']
+        ideal_trips = t_data['Trips_Ideal_Harian']
+        diff = t_data['Selisih_Trips_Harian']
+        status = t_data['Status_Alokasi']
+        
+        if status == 'DEFISIT':
+            st.error(f"""
+            📌 **Analisis Kebutuhan Operasional - {selected_terminal}:**  
+            Terminal ini melayani rata-rata **{pnp:,.0f} penumpang/hari** dengan **{exist_trips:,.0f} trip/hari** (Load factor saat ini: **{pnp/exist_trips:.1f} pnp/bus**).  
+            Berdasarkan target kapasitas ideal **{target_capacity} pnp/bus**, terminal ini mengalami **DEFISIT {abs(diff):,.0f} TRIP/HARI**. Membutuhkan penambahan frekuensi bus dari terminal surplus.
+            """)
+        else:
+            st.success(f"""
+            📌 **Analisis Kebutuhan Operasional - {selected_terminal}:**  
+            Terminal ini melayani rata-rata **{pnp:,.0f} penumpang/hari** dengan **{exist_trips:,.0f} trip/hari** (Load factor saat ini: **{pnp/exist_trips:.1f} pnp/bus**).  
+            Berdasarkan target kapasitas ideal **{target_capacity} pnp/bus**, terminal ini mengalami **SURPLUS {diff:,.0f} TRIP/HARI**. Sebanyak **{diff:,.0f} trip** dapat direlokasi untuk membantu terminal defisit.
+            """)
+    else:
+        defisits = sim_df[sim_df['Status_Alokasi'] == 'DEFISIT']['Terminal'].tolist()
+        surpluses = sim_df[sim_df['Status_Alokasi'] == 'SURPLUS']['Terminal'].tolist()
+        st.info(f"""
+        📌 **Ringkasan Alokasi Provinsi (Target: {target_capacity} pnp/bus):**  
+        • **Terminal Defisit (Butuh Tambahan Bus):** {', '.join(defisits)}  
+        • **Terminal Surplus (Kapasitas Berlebih):** {len(surpluses)} terminal lain mencatatkan surplus trip yang dapat direlokasi secara efisien.
+        """)
+        
     st.dataframe(
         sim_df_sorted,
         use_container_width=True,
@@ -340,15 +344,6 @@ with tab4:
             "Selisih_Trips_Harian": st.column_config.NumberColumn("Status Alokasi Trips (Surplus/Defisit)", format="%+,.0f")
         }
     )
-    
-    st.markdown("""
-    ---
-    ### 📌 Rekomendasi Strategis
-    1. **Relokasi Operasional Lintas Terminal:** Mengalokasikan 138 trip/hari dari Blok M serta mengalihkan alokasi perjalanan dari terminal sepi (Klender & Pasar Minggu) ke Manggarai (+216 trip) dan Cililitan (+231 trip) tanpa perlu pengadaan armada baru[cite: 3].
-    2. **Optimalisasi Feeder Rute Transit:** Menata ulang rute bus feeder dari Terminal Gateway (Kampung Rambutan) langsung menuju Transit Hub (Manggarai & Cililitan)[cite: 3].
-    3. **Penyiapan Perjalanan Cadangan (Surge Buffer Planning):** Menerapkan protokol operasional cadangan pada periode lonjakan ekstrem tahunan (April & Mei)[cite: 3].
-    4. **Penjadwalan Maintenance Akhir Pekan:** Memanfaatkan penurunan volume harian di akhir pekan (~20.9%) untuk perawatan berkala[cite: 3].
-    """)
 
 # ==========================================
 # DOKUMEN RINGKASAN

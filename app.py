@@ -279,6 +279,7 @@ with tab3:
         
     with col_right:
         st.subheader("Prinsip Pareto 70/30 (Pusat Penumpukan)")
+        
         pareto_df = df.groupby('terminal')['jumlah_penumpang_berangkat'].sum().reset_index()
         total_p = pareto_df['jumlah_penumpang_berangkat'].sum()
         pareto_df['kontribusi'] = (pareto_df['jumlah_penumpang_berangkat'] / total_p) * 100
@@ -295,6 +296,10 @@ with tab3:
         )
         fig_pie.update_layout(template="plotly_white")
         st.plotly_chart(fig_pie, use_container_width=True)
+        
+        # Penambahan keterangan konteks makro saat mode filter aktif
+        if is_filtered:
+            st.caption(f"ℹ️ **Catatan Makro:** Grafik persentase di atas menampilkan proporsi konsentrasi penumpang skala provinsi DKI Jakarta (Top 3 Terminal vs Lainnya).")
 
 # ==========================================
 # TAB 4: SIMULASI RELOKASI BUS

@@ -349,7 +349,7 @@ with tab2:
 # ==========================================
 with tab3:
     st.subheader("Evaluasi Kepadatan Penumpang per Bus")
-    st.caption("Membandingkan jumlah penumpang per bus di setiap terminal untuk melihat terminal yang terlalu padat vs terminal yang sepi[cite: 1].")
+    st.caption("Membandingkan jumlah penumpang per bus di setiap terminal untuk melihat terminal yang terlalu padat vs terminal yang sepi.")
     
     target_capacity = st.slider(
         "Tentukan Target Penumpang Ideal per Bus:", 
@@ -383,24 +383,39 @@ with tab3:
             title=f"Beban Penumpang per Bus di {selected_terminal} Dibanding Terminal Lain"
         )
     else:
+        # LOGIKA WARNA DINAMIS BERDASARKAN SLIDER TARGET
+        def assign_color(lf, target):
+            if lf > target:
+                return RED_WARNING    # Padat/Overloaded (Di atas Target Slider)
+            elif lf >= (target * 0.5):
+                return GREEN_IDEAL    # Ideal/Wajar
+            else:
+                return GREY_SLATE     # Sepi/Underutilized
+
+        mismatch_summary_sorted['color'] = mismatch_summary_sorted['load_factor'].apply(lambda x: assign_color(x, target_capacity))
+
         fig_bar_mismatch = px.bar(
             mismatch_summary_sorted,
             x='terminal',
             y='load_factor',
-            color='load_factor',
-            color_continuous_scale=['#DBEAFE', '#2563EB', '#991B1B'],
+            color='color',
+            color_discrete_map="identity",
             text='load_factor',
             labels={'terminal': 'Nama Terminal', 'load_factor': 'Rata-rata Penumpang / Bus'},
-            title=f"Rata-Rata Penumpang per Bus (Target Ideal = {target_capacity} Penumpang/Bus)"
+            title=f"Rata-Rata Penumpang per Bus vs Target Ideal ({target_capacity} Penumpang/Bus)"
         )
         
     fig_bar_mismatch.add_hline(
         y=target_capacity, 
         line_dash="dash", 
         line_color=GREEN_IDEAL, 
-        annotation_text=f"Target Ideal ({target_capacity} pnp/bus)"
+        annotation_text=f"Target Slider ({target_capacity} pnp/bus)"
     )
     st.plotly_chart(make_seamless_chart(fig_bar_mismatch), use_container_width=True, config={'displayModeBar': False})
+
+    # Teks Indikator Dinamis
+    overloaded_terminals = mismatch_summary_sorted[mismatch_summary_sorted['load_factor'] > target_capacity]['terminal'].tolist()
+    st.info(f"📌 **Hasil Evaluasi pada Batas Target {target_capacity} Penumpang/Bus:** Terdapat **{len(overloaded_terminals)} terminal** yang melebihi batas beban ideal ({', '.join(overloaded_terminals)}).")
 
 # ==========================================
 # TAB 4: TREN BULANAN & PARETO 70/30

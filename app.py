@@ -105,6 +105,15 @@ st.sidebar.markdown("### Panel Kontrol")
 terminal_list = ["Seluruh Terminal"] + sorted(list(df['terminal'].dropna().unique()))
 selected_terminal = st.sidebar.selectbox("Pilih Terminal:", terminal_list)
 
+# Slider Target Kapasitas ditaruh di Sidebar agar berlaku untuk Tab 2 dan Tab 4 sekaligus
+target_capacity = st.sidebar.slider(
+    "Target Penumpang per Bus (Kapasitas Ideal):", 
+    min_value=20, 
+    max_value=60, 
+    value=40,
+    step=5
+)
+
 if selected_terminal != "Seluruh Terminal":
     filtered_df = df[df['terminal'] == selected_terminal]
     is_filtered = True
@@ -142,7 +151,7 @@ tab1, tab2, tab3, tab4 = st.tabs([
 # ==========================================
 with tab1:
     st.subheader("Analisis Selisih Arus Penumpang")
-    st.caption("Perhitungan selisih penumpang memisahkan terminal yang lebih banyak memberangkatkan penumpang vs terminal tempat kedatangan.")
+    st.caption("Perhitungan selisih penumpang memisahkan terminal yang lebih banyak memberangkatkan penumpang vs terminal tempat kedatangan[cite: 3].")
     
     hub_summary = df.groupby('terminal').agg({
         'jumlah_penumpang_datang': 'sum',
@@ -199,7 +208,7 @@ with tab1:
 # ==========================================
 with tab2:
     st.subheader("Evaluasi Kepadatan Penumpang per Bus")
-    st.caption("Membandingkan jumlah penumpang per bus di setiap terminal untuk melihat terminal yang terlalu padat vs terminal yang sepi.")
+    st.caption("Membandingkan jumlah penumpang per bus di setiap terminal untuk melihat terminal yang terlalu padat vs terminal yang sepi[cite: 3].")
     
     mismatch_summary = df.groupby('terminal').agg({
         'jumlah_penumpang_berangkat': 'sum',
@@ -232,10 +241,16 @@ with tab2:
             color_continuous_scale='Reds',
             text='load_factor',
             labels={'terminal': 'Nama Terminal', 'load_factor': 'Rata-rata Penumpang / Bus'},
-            title="Rata-Rata Penumpang per Bus (Kapasitas Ideal = 40 Penumpang/Bus)"
+            title=f"Rata-Rata Penumpang per Bus (Target Ideal = {target_capacity} Penumpang/Bus)"
         )
         
-    fig_bar_mismatch.add_hline(y=40, line_dash="dash", line_color="#16A34A", annotation_text="Target Ideal (40 pnp/bus)")
+    # Garis batas ideal secara dinamis mengikuti target_capacity dari slider
+    fig_bar_mismatch.add_hline(
+        y=target_capacity, 
+        line_dash="dash", 
+        line_color="#16A34A", 
+        annotation_text=f"Target Ideal ({target_capacity} pnp/bus)"
+    )
     fig_bar_mismatch.update_layout(template="plotly_white")
     st.plotly_chart(fig_bar_mismatch, use_container_width=True)
 
@@ -275,7 +290,7 @@ with tab3:
         fig_pie = px.pie(
             values=[top3, other],
             names=['3 Terminal Teratas (Cililitan, Manggarai, Blok M)', '14 Terminal Lainnya'],
-            title=f"3 Terminal Teratas Menyumbang {top3:.2f}% Penumpang",
+            title=f"3 Terminal Teratas Menyumbang {top3:.2f}% Penumpang[cite: 3]",
             color_discrete_sequence=['#0F172A', '#94A3B8']
         )
         fig_pie.update_layout(template="plotly_white")
@@ -285,9 +300,7 @@ with tab3:
 # TAB 4: SIMULASI RELOKASI BUS
 # ==========================================
 with tab4:
-    st.subheader("Simulasi Alokasi Bus Ideal")
-    
-    target_capacity = st.slider("Tentukan Target Penumpang Ideal per Bus:", min_value=20, max_value=60, value=40)
+    st.subheader(f"Simulasi Alokasi Bus Ideal (Target: {target_capacity} Penumpang/Bus)")
     
     sim_df = df.groupby('terminal').agg({
         'jumlah_penumpang_berangkat': 'mean',
@@ -330,7 +343,7 @@ with tab4:
         st.info(f"""
         📌 **Ringkasan Alokasi Bus Se-Jakarta (Target: {target_capacity} penumpang/bus):**  
         • **Terminal Kekurangan Bus (Defisit):** {', '.join(defisits)}  
-        • **Terminal Kelebihan Bus (Surplus):** {len(surpluses)} terminal lain memiliki armada berlebih yang bisa dialihkan secara efisien.
+        • **Terminal Kelebihan Bus (Surplus):** {len(surpluses)} terminal lain memiliki armada berlebih yang bisa dialihkan secara efisien[cite: 3].
         """)
         
     st.dataframe(

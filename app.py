@@ -180,7 +180,7 @@ with tab1:
     st.divider()
 
     # 2. Ranking Total Pergerakan Bus 17 Terminal & Anomali Manggarai
-    st.subheader("🚌 Evaluasi Lalu Lintas Pergerakan Bus (17 Terminal)")
+    st.subheader(" Evaluasi Lalu Lintas Pergerakan Bus (17 Terminal)")
     
     bus_ranking = df.groupby('terminal').agg({
         'jumlah_bus_datang': 'sum',
